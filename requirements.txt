@@ -1,0 +1,16 @@
+# notebook
+jupyter ~= 1.0
+jupyterthemes ~= 0.14
+
+# dataset
+h5py ~= 2.6
+
+# plotting
+matplotlib ~= 2.0
+
+# pytorch
+https://s3.amazonaws.com/pytorch/whl/torch-0.1.8.post1-cp36-cp36m-macosx_10_7_x86_64.whl
+torchvision ~= 0.1
+
+# preprocessing
+scikit-image ~= 0.12
