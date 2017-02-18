@@ -2,9 +2,9 @@ import os
 import h5py
 import numpy as np
 
-from torch.utils import data
+from torch.utils.data import Dataset, DataLoader
 
-class MINC2(data.Dataset):
+class MINC2(Dataset):
     def __init__(self, filename):
         self.minc = h5py.File(filename, 'r')
         self.volume = self.minc['minc-2.0/image/0/image']
@@ -20,19 +20,21 @@ class MINC2(data.Dataset):
     def __len__(self):
         return self.zlength
 
-class MNIBITE(data.Dataset):
+def format_path(directory, filename, params):
+    return os.path.join(directory, filename.format(params))
+
+class MNIBITE(Dataset):
     def __init__(self, directory, id, transform=None):
-        self.mr_minc2 = MINC2(os.path.join(directory, '{}_mr.mnc'.format(id)))
-        self.us_minc2 = MINC2(os.path.join(directory, '{}_us.mnc'.format(id)))
+        self.mr = MINC2(format_path(directory, '{}_mr.mnc', id))
+        self.us = MINC2(format_path(directory, '{}_us.mnc', id))
         self.transform = transform
 
     def __getitem__(self, index):
-        mr = self.mr_minc2[index]
-        us = self.us_minc2[index]
+        mr = self.mr[index]
+        us = self.us[index]
         if self.transform is not None:
-            mr = self.transform(mr)
-            us = self.transform(us)
+            mr, us = self.transform(mr, us)
         return mr, us
 
     def __len__(self):
-        return len(self.mr_minc2)
+        return len(self.mr)
