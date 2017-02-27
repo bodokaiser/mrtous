@@ -2,8 +2,9 @@ import numpy as np
 
 from skimage.filters import threshold_otsu
 
-class ROICrop(object):
-    def __call__(self, mr, us):
+class RegionCrop(object):
+
+    def __call__(self, mr: np.ndarray, us: np.ndarray):
         if np.any(mr) and np.any(us):
             mask = us > threshold_otsu(us)
             xrange = np.where(np.any(mask, 0))[0][[0, -1]]

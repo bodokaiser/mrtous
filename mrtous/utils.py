@@ -1,4 +1,3 @@
-import matplotlib
 import matplotlib.pyplot as plt
 
 def show_images(images, cols, rows):
