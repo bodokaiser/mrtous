@@ -15,8 +15,8 @@ class MINC2(Dataset):
         self.zlength = self.minc['minc-2.0/dimensions/zspace'].attrs['length']
 
     def __getitem__(self, index: int):
-        slice = np.array(self.volume[index])
-        return slice / np.sum(np.abs(self.vrange))
+        slice = np.array(self.volume[index]) / np.sum(np.abs(self.vrange))
+        return slice.astype(np.float32)
 
     def __len__(self) -> int:
         return self.zlength
