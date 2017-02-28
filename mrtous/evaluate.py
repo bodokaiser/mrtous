@@ -26,7 +26,7 @@ def train(model, loader, epochs, train_fn):
 
             total_loss += loss.data[0]
 
-        train_fn(inputs, targets, results, epoch, loss, total_loss)
+        train_fn(inputs, targets, results, epoch, total_loss)
 
 def evaluate(model, loader, eval_fn):
     for _, (mr, us) in enumerate(filter(is_empty, loader)):
