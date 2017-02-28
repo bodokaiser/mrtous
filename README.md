@@ -49,7 +49,7 @@ pip3 install -r requirements.txt
 This will train a simple model with 30 epochs and then show you the results.
 
 ```shell
-python3 mrtous/evaluate.py
+python3 scripts/evaluate.py --datadir=mnibite --train=13 --epochs=30
 ```
 
 ![Result1](https://cloud.githubusercontent.com/assets/1780466/23397311/4249227e-fd98-11e6-9de5-1b4e5213f2a1.png)
