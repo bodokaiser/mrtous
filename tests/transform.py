@@ -1,7 +1,7 @@
 import unittest
 
 from numpy import testing
-from mrtous import dataset, transform
+from mrtous import utils, dataset, transform
 
 class TestRegionCrop(unittest.TestCase):
 
@@ -17,6 +17,7 @@ class TestRegionCrop(unittest.TestCase):
             testing.assert_array_equal(us, self.us[0])
         with self.subTest():
             mr, us = self.transform(self.mr[120], self.us[120])
+            utils.show_images([mr, us, self.mr[120], self.us[120]], 2, 2)
             self.assertTupleEqual(mr.shape, us.shape)
             self.assertLess(mr.shape[0], self.mr[120].shape[0])
             self.assertLess(mr.shape[1], self.mr[120].shape[1])

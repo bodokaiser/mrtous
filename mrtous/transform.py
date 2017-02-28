@@ -9,6 +9,6 @@ class RegionCrop(object):
             mask = us > threshold_otsu(us)
             xrange = np.where(np.any(mask, 0))[0][[0, -1]]
             yrange = np.where(np.any(mask, 1))[0][[0, -1]]
-            mr = mr[xrange[0]:xrange[1], yrange[0]:yrange[1]]
-            us = us[xrange[0]:xrange[1], yrange[0]:yrange[1]]
+            mr = mr[yrange[0]:yrange[1], xrange[0]:xrange[1]]
+            us = us[yrange[0]:yrange[1], xrange[0]:xrange[1]]
         return mr, us
