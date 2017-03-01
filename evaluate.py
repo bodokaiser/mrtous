@@ -1,11 +1,8 @@
 import argparse
-import numpy as np
 
 from mrtous import dataset, transform, network
 from mrtous import evaluate, visualize
 from torch.utils.data import DataLoader
-
-import matplotlib.pyplot as plt
 
 def main(args):
     model = network.Simple()
@@ -23,7 +20,7 @@ def main(args):
         ], 1, 3)
     def train_fn(inputs, targets, results, epoch, loss):
         loss_timeline.append(loss)
-        loss_plot_fn(np.arange(0, len(loss_timeline)), loss_timeline)
+        loss_plot_fn(loss_timeline)
         print(f'epoch: {epoch}, loss: {loss}')
 
     evaluate.train(model, loader, args.epochs, train_fn)
