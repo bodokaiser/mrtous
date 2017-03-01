@@ -14,12 +14,20 @@ def image_grid(images, cols, rows):
 def image_plot(titles):
     fig, axes = plt.subplots(1, len(titles))
 
+    img = []
+
     def update(images):
-        for i in range(len(titles)):
-            axes[i].set_title(titles[i])
-            axes[i].imshow(images[i], interpolation='none')
-            axes[i].figure.canvas.draw()
-            axes[i].figure.canvas.flush_events()
+        if len(img) == 0:
+            for i in range(len(titles)):
+                axes[i].set_title(titles[i])
+                img.append(axes[i].imshow(images[i],
+                    interpolation='none', vmin=-.5, vmax=+.5))
+            fig.colorbar(img[0])
+        else:
+            for i in range(len(titles)):
+                img[i].set_data(images[i])
+                axes[i].figure.canvas.draw()
+                axes[i].figure.canvas.flush_events()
 
     plt.ion()
     plt.show()
