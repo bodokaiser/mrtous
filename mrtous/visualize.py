@@ -1,4 +1,3 @@
-import numpy as np
 import matplotlib.pyplot as plt
 
 def image_grid(images, cols, rows):
@@ -8,6 +7,14 @@ def image_grid(images, cols, rows):
         plt.imshow(images[i])
     plt.show()
 
-def plot_loss(loss):
-    plt.plot(np.arange(0, len(loss)), loss)
+def loss_plot():
+    fig, ax = plt.subplots()
+
+    plt.ion()
     plt.show()
+
+    def update(x, y):
+        ax.plot(x, y, 'r')
+        ax.figure.canvas.flush_events()
+
+    return update

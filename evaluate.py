@@ -1,30 +1,32 @@
 import argparse
+import numpy as np
 
 from mrtous import dataset, transform, network
 from mrtous import evaluate, visualize
 from torch.utils.data import DataLoader
 
-loss_history = []
-
-def eval_fn(inputs, targets, results):
-    visualize.image_grid([
-        inputs.data[0][0].numpy(),
-        targets.data[0][0].numpy(),
-        results.data[0][0].numpy(),
-    ], 1, 3)
-
-def train_fn(inputs, targets, results, epoch, loss):
-    loss_history.append(loss)
-
-    print(f'epoch: {epoch}, loss: {loss}')
+import matplotlib.pyplot as plt
 
 def main(args):
     model = network.Simple()
     loader = DataLoader(
         dataset.MNIBITE(args.datadir, args.train, transform.RegionCrop()))
 
+    loss_timeline = []
+    loss_plot_fn = visualize.loss_plot()
+
+    def eval_fn(inputs, targets, results):
+        visualize.image_grid([
+            inputs.data[0][0].numpy(),
+            targets.data[0][0].numpy(),
+            results.data[0][0].numpy(),
+        ], 1, 3)
+    def train_fn(inputs, targets, results, epoch, loss):
+        loss_timeline.append(loss)
+        loss_plot_fn(np.arange(0, len(loss_timeline)), loss_timeline)
+        print(f'epoch: {epoch}, loss: {loss}')
+
     evaluate.train(model, loader, args.epochs, train_fn)
-    visualize.plot_loss(loss_history)
     evaluate.evaluate(model, loader, eval_fn)
 
 if __name__ == '__main__':
