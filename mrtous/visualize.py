@@ -8,7 +8,23 @@ def image_grid(images, cols, rows):
     for i in range(cols*rows):
         plt.subplot(cols, rows, i+1)
         plt.imshow(images[i])
+    plt.ion()
     plt.show()
+
+def image_plot(titles):
+    fig, axes = plt.subplots(1, len(titles))
+
+    def update(images):
+        for i in range(len(titles)):
+            axes[i].set_title(titles[i])
+            axes[i].imshow(images[i], interpolation='none')
+            axes[i].figure.canvas.draw()
+            axes[i].figure.canvas.flush_events()
+
+    plt.ion()
+    plt.show()
+
+    return update
 
 def loss_plot():
     fig, axes = plt.subplots()

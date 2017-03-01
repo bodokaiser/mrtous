@@ -7,24 +7,25 @@ from torch.utils.data import DataLoader
 def main(args):
     model = network.Simple()
     loader = DataLoader(
-        dataset.MNIBITE(args.datadir, args.train, transform.RegionCrop()))
+        dataset.MNIBITE(args.datadir, args.train, transform.RegionCrop()),
+        shuffle=True)
 
     loss_timeline = []
     loss_plot_fn = visualize.loss_plot()
+    image_plot_fn = visualize.image_plot(['mr', 'us', 're', 'us-re'])
 
-    def eval_fn(inputs, targets, results):
-        visualize.image_grid([
-            inputs.data[0][0].numpy(),
-            targets.data[0][0].numpy(),
-            results.data[0][0].numpy(),
-        ], 1, 3)
     def train_fn(inputs, targets, results, epoch, loss):
         loss_timeline.append(loss)
         loss_plot_fn(loss_timeline)
+        image_plot_fn([
+            inputs.data[0][0].numpy(),
+            targets.data[0][0].numpy(),
+            results.data[0][0].numpy(),
+            targets.data[0][0].numpy()-results.data[0][0].numpy(),
+        ])
         print(f'epoch: {epoch}, loss: {loss}')
 
     evaluate.train(model, loader, args.epochs, train_fn)
-    evaluate.evaluate(model, loader, eval_fn)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
