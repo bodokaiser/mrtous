@@ -28,7 +28,7 @@ def train(model, loader, epochs, train_fn):
 
         train_fn(inputs, targets, results, epoch, total_loss)
 
-def evaluate(model, loader, eval_fn):
+def evaluate(model, loader, eval_fn, epoch=True):
     criterion = MSELoss(size_average=False)
 
     total_loss = 0
@@ -38,6 +38,12 @@ def evaluate(model, loader, eval_fn):
         targets = Variable(us).unsqueeze(1)
         results = model(inputs)
 
-        total_loss += criterion(results, targets).data[0]
+        loss = criterion(results, targets).data[0]
 
-    eval_fn(inputs, targets, results, total_loss)
+        if not epoch:
+            eval_fn(inputs, targets, results, loss)
+        else:
+            total_loss += loss
+
+    if epoch:
+        eval_fn(inputs, targets, results, total_loss)

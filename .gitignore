@@ -1,2 +1,5 @@
 # dataset
 mnibite
+
+# checkpoints
+*.ckpt

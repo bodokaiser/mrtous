@@ -52,7 +52,8 @@ def loss_plot():
         x = np.arange(0, len(train_loss))
 
         lin1.set_data(x, train_loss)
-        lin2.set_data(x, test_loss)
+        if len(test_loss) > 0:
+            lin2.set_data(x, test_loss)
 
         axes.set_xticks(np.arange(0, np.max(x)+1, 1))
         axes.relim()

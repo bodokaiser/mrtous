@@ -1,4 +1,5 @@
 import argparse
+import torch
 
 from mrtous import dataset, transform, network
 from mrtous import session, visualize
@@ -43,12 +44,16 @@ def main(args):
 
     session.train(model, train_loader, args.epochs, train_fn)
 
+    if args.checkpoint is not None:
+        torch.save(model.state_dict(), args.checkpoint)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', type=int, nargs='?', default=11)
     parser.add_argument('--train', type=int, nargs='?', default=13)
-    parser.add_argument('--epochs', type=int, nargs='?', default=30)
+    parser.add_argument('--epochs', type=int, nargs='?', default=20)
     parser.add_argument('--datadir', type=str, nargs='?', default='mnibite')
+    parser.add_argument('--checkpoint', type=str, nargs='?', dest='checkpoint')
     parser.add_argument('--plot-loss', dest='plot_loss', action='store_true')
     parser.add_argument('--plot-image', dest='plot_image', action='store_true')
     parser.set_defaults(plot_loss=False, plot_image=False)
