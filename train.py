@@ -6,7 +6,7 @@ from mrtous import session, visualize
 from torch.utils.data import DataLoader
 
 def main(args):
-    model = network.Simple()
+    model = network.Basic()
 
     test_loader = DataLoader(dataset.MNIBITE(args.datadir, args.test,
         transform.RegionCrop()), shuffle=True)

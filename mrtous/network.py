@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-class Simple(nn.Module):
+class Basic(nn.Module):
 
     def __init__(self):
         super().__init__()

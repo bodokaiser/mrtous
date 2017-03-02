@@ -6,7 +6,7 @@ from mrtous import session, visualize
 from torch.utils.data import DataLoader
 
 def main(args):
-    model = network.Simple()
+    model = network.Basic()
     model.load_state_dict(torch.load(args.checkpoint))
 
     loader = DataLoader(dataset.MNIBITE(args.datadir, args.dataset,
