@@ -3,12 +3,16 @@ import numpy as np
 from matplotlib import lines
 from matplotlib import pyplot as plt
 
+VMIN = -0.5
+VMAX = +0.5
+
+
 def image_grid(images, cols, rows):
     plt.figure(figsize=[18, 6])
     for i in range(cols*rows):
         plt.subplot(cols, rows, i+1)
-        plt.imshow(images[i])
-    plt.ion()
+        plt.imshow(images[i], interpolation='none', vmin=VMIN, vmax=VMAX)
+    plt.ioff()
     plt.show()
 
 def image_plot(titles):
@@ -21,7 +25,7 @@ def image_plot(titles):
             for i in range(len(titles)):
                 axes[i].set_title(titles[i])
                 img.append(axes[i].imshow(images[i],
-                    interpolation='none', vmin=-.5, vmax=+.5))
+                    interpolation='none', vmin=VMIN, vmax=VMAX))
             fig.colorbar(img[0])
         else:
             for i in range(len(titles)):

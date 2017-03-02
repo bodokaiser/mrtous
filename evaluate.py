@@ -16,7 +16,7 @@ def main(args):
 
     if args.plot_loss:
         loss_plot_fn = visualize.loss_plot()
-    if args.plot_image:
+    if args.plot_image_live:
         image_plot_fn = visualize.image_plot(['mr', 'us', 're', 'us-re'])
 
     def evaluate_fn(inputs, targets, results, loss):
@@ -25,6 +25,13 @@ def main(args):
         if args.plot_loss:
             loss_plot_fn(losses, [])
         if args.plot_image:
+            visualize.image_grid([
+                inputs.data[0][0].numpy(),
+                targets.data[0][0].numpy(),
+                results.data[0][0].numpy(),
+                targets.data[0][0].numpy()-results.data[0][0].numpy(),
+            ], 1, 4)
+        if args.plot_image_live:
             image_plot_fn([
                 inputs.data[0][0].numpy(),
                 targets.data[0][0].numpy(),
@@ -43,5 +50,6 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=str, dest='checkpoint')
     parser.add_argument('--plot-loss', dest='plot_loss', action='store_true')
     parser.add_argument('--plot-image', dest='plot_image', action='store_true')
-    parser.set_defaults(plot_loss=False, plot_image=False)
+    parser.add_argument('--plot-image-live', dest='plot_image_live', action='store_true')
+    parser.set_defaults(plot_loss=False, plot_image=False, plot_image_live=False)
     main(parser.parse_args())
