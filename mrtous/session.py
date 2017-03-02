@@ -29,8 +29,15 @@ def train(model, loader, epochs, train_fn):
         train_fn(inputs, targets, results, epoch, total_loss)
 
 def evaluate(model, loader, eval_fn):
+    criterion = MSELoss(size_average=False)
+
+    total_loss = 0
+
     for _, (mr, us) in enumerate(filter(is_empty, loader)):
         inputs = Variable(mr).unsqueeze(1)
         targets = Variable(us).unsqueeze(1)
+        results = model(inputs)
 
-        eval_fn(inputs, targets, model(inputs))
+        total_loss += criterion(results, targets).data[0]
+
+    eval_fn(inputs, targets, results, total_loss)

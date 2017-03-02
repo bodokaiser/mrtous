@@ -37,7 +37,8 @@ def image_plot(titles):
 def loss_plot():
     fig, axes = plt.subplots()
 
-    line, = axes.plot([], [], color='orange', label='training')
+    lin1, = axes.plot([], [], color='orange', label='training')
+    lin2, = axes.plot([], [], color='blue', label='testing')
 
     axes.set_title('mean-squared-error per epoch')
     axes.set_xlabel('epoch')
@@ -47,10 +48,12 @@ def loss_plot():
     plt.ion()
     plt.show()
 
-    def update(y):
-        x = np.arange(0, len(y))
+    def update(train_loss, test_loss):
+        x = np.arange(0, len(train_loss))
 
-        line.set_data(x, y)
+        lin1.set_data(x, train_loss)
+        lin2.set_data(x, test_loss)
+
         axes.set_xticks(np.arange(0, np.max(x)+1, 1))
         axes.relim()
         axes.autoscale_view(scalex=False, scaley=True)
