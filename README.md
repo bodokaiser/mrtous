@@ -54,7 +54,3 @@ python3 scripts/evaluate.py --datadir=mnibite --train=13 --epochs=30
 
 ![Result1](https://cloud.githubusercontent.com/assets/1780466/23397311/4249227e-fd98-11e6-9de5-1b4e5213f2a1.png)
 ![Result2](https://cloud.githubusercontent.com/assets/1780466/23397313/44265e40-fd98-11e6-99c5-695585debeb8.png)
-
-## License
-
-© 2017 Bodo Kaiser <bodo.kaiser@me.com>
