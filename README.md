@@ -46,10 +46,11 @@ pip3 install -r requirements.txt
 
 ## Evaluation
 
-This will train a simple model with 30 epochs and then show you the results.
+This will train a simple model with 30 epochs and show you live udpates
+on loss and rendered images.
 
 ```shell
-python3 scripts/evaluate.py --datadir=mnibite --train=13 --epochs=30
+python3 train.py --live-images --plot-loss
 ```
 
 ![Result1](https://cloud.githubusercontent.com/assets/1780466/23397311/4249227e-fd98-11e6-9de5-1b4e5213f2a1.png)
