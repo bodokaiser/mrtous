@@ -22,7 +22,16 @@ class TestMINC2(unittest.TestCase):
                 self.assertEqual(minc.ylength, self.VALID_LENGTH[1])
                 self.assertEqual(minc.zlength, self.VALID_LENGTH[2])
 
+    def test_iter(self):
+        for index, minc in enumerate(self.minc):
+            with self.subTest(index=index):
+                for _ in minc:
+                    pass
+
     def test_getlen(self):
+        self.assertEqual(len(self.minc[0]), len(self.minc[0].volume))
+        self.assertEqual(len(self.minc[1]), len(self.minc[1].volume))
+
         for index, minc in enumerate(self.minc):
             with self.subTest(index=index):
                 self.assertEqual(len(minc), self.VALID_LENGTH[2])
@@ -32,6 +41,7 @@ class TestMINC2(unittest.TestCase):
             with self.subTest(index=index):
                 self.assertLessEqual(minc[0].max(), +1.0)
                 self.assertGreaterEqual(minc[0].min(), -1.0)
+
                 with self.assertRaises(IndexError):
                     minc[self.VALID_RANGES[2]]
 
@@ -55,7 +65,7 @@ class TestMNIBITE(unittest.TestCase):
             return 1, 2
         testing.assert_array_equal(self.mnibite[0][0], self.mnibite.mr[0])
         testing.assert_array_equal(self.mnibite[0][1], self.mnibite.us[0])
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             self.mnibite[len(self.mnibite)]
         self.mnibite.transform = transform
         self.assertTupleEqual(self.mnibite[0], (1, 2))

@@ -7,19 +7,24 @@ from torch.utils.data import Dataset
 class MINC2(Dataset):
 
     def __init__(self, filename: str):
-        self.minc = h5py.File(filename, 'r')
-        self.volume = self.minc['minc-2.0/image/0/image']
-        self.vrange = self.minc['minc-2.0/image/0/image'].attrs['valid_range']
-        self.xlength = self.minc['minc-2.0/dimensions/xspace'].attrs['length']
-        self.ylength = self.minc['minc-2.0/dimensions/yspace'].attrs['length']
-        self.zlength = self.minc['minc-2.0/dimensions/zspace'].attrs['length']
+        with h5py.File(filename, 'r') as f:
+            self.volume = f['minc-2.0/image/0/image']
+            self.vrange = f['minc-2.0/image/0/image'].attrs['valid_range']
+            self.xlength = f['minc-2.0/dimensions/xspace'].attrs['length']
+            self.ylength = f['minc-2.0/dimensions/yspace'].attrs['length']
+            self.zlength = f['minc-2.0/dimensions/zspace'].attrs['length']
+            self.volume = np.array(self.volume, np.float32)
+            self.volume -= np.min(self.vrange)
+            self.volume /= np.sum(np.abs(self.vrange))
 
     def __getitem__(self, index: int):
-        slice = np.array(self.volume[index]) / np.sum(np.abs(self.vrange))
-        return slice.astype(np.float32)
+        return self.volume[index]
 
     def __len__(self) -> int:
         return self.zlength
+
+    def __iter__(self):
+        return self.volume.__iter__()
 
 class MNIBITE(Dataset):
 
