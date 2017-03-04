@@ -1,3 +1,4 @@
+import os
 import unittest
 import numpy as np
 
@@ -80,3 +81,33 @@ class TestMNIBITENative(unittest.TestCase):
             self.mnibite[len(self.mnibite)]
         self.mnibite.transform = transform
         self.assertTupleEqual(self.mnibite[0], (1, 2))
+
+def count_files(root, extension):
+    return sum(1 for f in os.listdir(root) if f.endswith(extension))
+
+class TestMNIBITENative(unittest.TestCase):
+
+    def setUp(self):
+        self.mnibite1 = dataset.MNIBITEFolder('mnibite/11')
+        self.mnibite2 = dataset.MNIBITEFolder('mnibite/13')
+        self.mnibite3 = dataset.MNIBITEFolder(['mnibite/11', 'mnibite/13'])
+
+    def test_init(self):
+        self.assertGreaterEqual(len(self.mnibite1.mr_fnames), 0)
+        self.assertGreaterEqual(len(self.mnibite1.us_fnames), 0)
+
+    def test_getitem(self):
+        mr, us = self.mnibite1[0]
+
+        self.assertIsInstance(mr, np.ndarray)
+        self.assertIsInstance(us, np.ndarray)
+        self.assertTupleEqual(mr.shape, us.shape)
+        self.assertTupleEqual(mr.shape, (30, 30))
+
+    def test_getlen(self):
+        len1 = count_files('mnibite/11', '.png') // 2
+        len2 = count_files('mnibite/13', '.png') // 2
+
+        self.assertEqual(len(self.mnibite1), len1)
+        self.assertEqual(len(self.mnibite2), len2)
+        self.assertEqual(len(self.mnibite3), len1+len2)

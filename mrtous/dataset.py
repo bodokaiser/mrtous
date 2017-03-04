@@ -52,26 +52,27 @@ class MNIBITENative(Dataset):
 class MNIBITEFolder(Dataset):
 
     def __init__(self, root):
-        self.root = root
+        if type(root) is str:
+            root = [root]
+
         self.mr_fnames = []
         self.us_fnames = []
 
-        for fname in os.listdir(root):
-            if fname.endswith('_mr.png'):
-                self.mr_fnames.append(fname)
-            if fname.endswith('_us.png'):
-                self.us_fnames.append(fname)
+        for root in root:
+            for fname in os.listdir(root):
+                fname = os.path.join(root, fname)
+                if fname.endswith('_mr.png'):
+                    self.mr_fnames.append(fname)
+                if fname.endswith('_us.png'):
+                    self.us_fnames.append(fname)
 
         assert(len(self.mr_fnames) == len(self.us_fnames))
 
     def __getitem__(self, index):
-        mr_fname = os.path.join(self.root, self.mr_fnames[index])
-        us_fname = os.path.join(self.root, self.us_fnames[index])
+        mr = sk.img_as_float(io.imread(self.mr_fnames[index]))
+        us = sk.img_as_float(io.imread(self.us_fnames[index]))
 
-        mr = sk.img_as_float(io.imread(mr_fname)).astype(np.float32)
-        us = sk.img_as_float(io.imread(us_fname)).astype(np.float32)
-
-        return mr, us
+        return mr.astype(np.float32), us.astype(np.float32)
 
     def __len__(self):
         return len(self.mr_fnames)
