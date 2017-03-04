@@ -32,7 +32,7 @@ class MINC2(Dataset):
 
         raise IndexError('invalid index')
 
-class MNIBITE(Dataset):
+class MNIBITENative(Dataset):
 
     def __init__(self, root, id, transform=None):
         self.mr = MINC2(os.path.join(root, f'{id:02d}_mr.mnc'))

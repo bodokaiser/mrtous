@@ -56,10 +56,10 @@ class TestMINC2(unittest.TestCase):
                 with self.assertRaises(IndexError):
                     minc[np.sum(self.LENGTH)]
 
-class TestMNIBITE(unittest.TestCase):
+class TestMNIBITENative(unittest.TestCase):
 
     def setUp(self):
-        self.mnibite = dataset.MNIBITE('mnibite', 1)
+        self.mnibite = dataset.MNIBITENative('mnibite', 1)
 
     def test_init(self):
         self.assertIsInstance(self.mnibite.mr, dataset.MINC2)
