@@ -1,11 +1,6 @@
-import numpy as np
-
 from torch.nn import MSELoss
 from torch.optim import Adam
 from torch.autograd import Variable
-
-def is_empty(images):
-    return np.any(images[1].numpy())
 
 def train(model, loader, epochs, train_fn):
     criterion = MSELoss(size_average=False)
@@ -14,7 +9,7 @@ def train(model, loader, epochs, train_fn):
     for epoch in range(1, epochs+1):
         total_loss = 0
 
-        for step, (mr, us) in enumerate(filter(is_empty, loader)):
+        for step, (mr, us) in enumerate(loader):
             inputs = Variable(mr).unsqueeze(1)
             targets = Variable(us).unsqueeze(1)
             results = model(inputs)
@@ -33,7 +28,7 @@ def evaluate(model, loader, eval_fn, epoch=True):
 
     total_loss = 0
 
-    for _, (mr, us) in enumerate(filter(is_empty, loader)):
+    for _, (mr, us) in enumerate(loader):
         inputs = Variable(mr).unsqueeze(1)
         targets = Variable(us).unsqueeze(1)
         results = model(inputs)

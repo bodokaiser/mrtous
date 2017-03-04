@@ -1,7 +1,9 @@
 import os
 import h5py
 import numpy as np
+import skimage as sk
 
+from skimage import io, util
 from torch.utils.data import Dataset
 
 class MINC2(Dataset):
@@ -32,9 +34,9 @@ class MINC2(Dataset):
 
 class MNIBITE(Dataset):
 
-    def __init__(self, dir, id, transform=None):
-        self.mr = MINC2(os.path.join(dir, f'{id:02d}_mr.mnc'))
-        self.us = MINC2(os.path.join(dir, f'{id:02d}_us.mnc'))
+    def __init__(self, root, id, transform=None):
+        self.mr = MINC2(os.path.join(root, f'{id:02d}_mr.mnc'))
+        self.us = MINC2(os.path.join(root, f'{id:02d}_us.mnc'))
         self.transform = transform
 
     def __getitem__(self, index):
@@ -46,3 +48,30 @@ class MNIBITE(Dataset):
 
     def __len__(self):
         return len(self.mr)
+
+class MNIBITEFolder(Dataset):
+
+    def __init__(self, root):
+        self.root = root
+        self.mr_fnames = []
+        self.us_fnames = []
+
+        for fname in os.listdir(root):
+            if fname.endswith('_mr.png'):
+                self.mr_fnames.append(fname)
+            if fname.endswith('_us.png'):
+                self.us_fnames.append(fname)
+
+        assert(len(self.mr_fnames) == len(self.us_fnames))
+
+    def __getitem__(self, index):
+        mr_fname = os.path.join(self.root, self.mr_fnames[index])
+        us_fname = os.path.join(self.root, self.us_fnames[index])
+
+        mr = sk.img_as_float(io.imread(mr_fname)).astype(np.float32)
+        us = sk.img_as_float(io.imread(us_fname)).astype(np.float32)
+
+        return mr, us
+
+    def __len__(self):
+        return len(self.mr_fnames)

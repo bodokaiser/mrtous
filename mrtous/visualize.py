@@ -3,9 +3,8 @@ import numpy as np
 from matplotlib import lines
 from matplotlib import pyplot as plt
 
-VMIN = -0.5
-VMAX = +0.5
-
+VMIN = 0.0
+VMAX = 1.0
 
 def image_grid(images, cols, rows):
     plt.figure(figsize=[18, 6])

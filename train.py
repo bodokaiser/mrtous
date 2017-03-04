@@ -1,5 +1,6 @@
-import argparse
+import os
 import torch
+import argparse
 
 from mrtous import dataset, transform, network
 from mrtous import session, visualize
@@ -8,10 +9,12 @@ from torch.utils.data import DataLoader
 def main(args):
     model = network.Basic()
 
-    test_loader = DataLoader(dataset.MNIBITE(args.datadir, args.test,
-        transform.RegionCrop()), shuffle=True)
-    train_loader = DataLoader(dataset.MNIBITE(args.datadir, args.train,
-        transform.RegionCrop()), shuffle=True)
+    test_loader = DataLoader(dataset.MNIBITEFolder(
+        os.path.join(args.datadir, str(args.test))),
+            shuffle=True, batch_size=128)
+    train_loader = DataLoader(dataset.MNIBITEFolder(
+        os.path.join(args.datadir, str(args.train))),
+            shuffle=True, batch_size=128)
 
     test_loss = []
     train_loss = []
