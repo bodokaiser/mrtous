@@ -72,11 +72,11 @@ def main(args):
     model = network.Basic()
 
     test_loader = data.DataLoader(dataset.MNIBITEFolder(
-        os.path.join(args.datadir, str(args.test))),
+        map(lambda d: os.path.join(args.datadir, d), args.test)),
             shuffle=True, batch_size=128)
     train_loader = data.DataLoader(dataset.MNIBITEFolder(
-        os.path.join(args.datadir, str(args.train))),
-            shuffle=True, batch_size=128)
+        map(lambda d: os.path.join(args.datadir, d), args.train)),
+            shuffle=True, batch_size=1)
 
     test_losses = []
     train_losses = []
@@ -129,8 +129,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test', type=int, nargs='?', default=11)
-    parser.add_argument('--train', type=int, nargs='?', default=13)
+    parser.add_argument('--test', type=str, nargs='+', default=['11'])
+    parser.add_argument('--train', type=str, nargs='+', default=['13'])
     parser.add_argument('--epochs', type=int, nargs='?', default=20)
     parser.add_argument('--datadir', type=str, nargs='?', default='mnibite')
     parser.add_argument('--show-loss', dest='show_loss', action='store_true')
