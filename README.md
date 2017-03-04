@@ -44,13 +44,22 @@ Install python dependencies.
 pip3 install -r requirements.txt
 ```
 
+## Patching
+
+To exclude empty training data (volume areas where we have no US available)
+and still use batching we create overlapping 30x30 patches and filter patches.
+
+```shell
+python3 -m scripts.patch
+```
+
 ## Evaluation
 
 This will train a simple model with 30 epochs and show you live udpates
 on loss and rendered images.
 
 ```shell
-python3 train.py --live-images --plot-loss
+python3 main.py --plot-images --plot-loss
 ```
 
 ![Result1](https://cloud.githubusercontent.com/assets/1780466/23397311/4249227e-fd98-11e6-9de5-1b4e5213f2a1.png)

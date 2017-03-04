@@ -1,7 +1,10 @@
 import os
+import sys
 import argparse
 import numpy as np
 import skimage as sk
+
+sys.path.append('..')
 
 from mrtous import dataset
 from skimage import io, util, exposure
@@ -12,8 +15,6 @@ def image_to_patches(image, size):
     return np.reshape(patches, [-1, size, size])
 
 def main(args):
-    io.use_plugin('freeimage')
-
     mnibite = dataset.MNIBITE(args.datadir, args.dataset)
 
     targetdir = os.path.join(args.targetdir, f'{args.dataset:02d}')
@@ -33,8 +34,10 @@ def main(args):
             us_patch = sk.img_as_uint(
                 exposure.rescale_intensity(us_patches[index], out_range='float'))
 
-            io.imsave(os.path.join(targetdir, f'{index}_mr.png'), mr_patch)
-            io.imsave(os.path.join(targetdir, f'{index}_us.png'), us_patch)
+            io.imsave(os.path.join(targetdir, f'{index}_mr.png'),
+                mr_patch, plugin='freeimage')
+            io.imsave(os.path.join(targetdir, f'{index}_us.png'),
+                us_patch, plugin='freeimage')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
