@@ -1,12 +1,12 @@
 import unittest
+import numpy as np
 
-from numpy import testing
 from mrtous import dataset
 
 class TestMINC2(unittest.TestCase):
 
-    VALID_LENGTH = [394, 466, 378]
-    VALID_RANGES = [[-32768, 32767], [0, 255]]
+    LENGTH = [394, 466, 378]
+    RANGES = [[-32768, 32767], [0, 255]]
 
     def setUp(self):
         self.minc = [
@@ -17,10 +17,10 @@ class TestMINC2(unittest.TestCase):
     def test_init(self):
         for index, minc in enumerate(self.minc):
             with self.subTest(index=index):
-                self.assertEqual(list(minc.vrange), self.VALID_RANGES[index])
-                self.assertEqual(minc.xlength, self.VALID_LENGTH[0])
-                self.assertEqual(minc.ylength, self.VALID_LENGTH[1])
-                self.assertEqual(minc.zlength, self.VALID_LENGTH[2])
+                self.assertEqual(list(minc.vrange), self.RANGES[index])
+                self.assertEqual(minc.xlength, self.LENGTH[0])
+                self.assertEqual(minc.ylength, self.LENGTH[1])
+                self.assertEqual(minc.zlength, self.LENGTH[2])
 
     def test_iter(self):
         for index, minc in enumerate(self.minc):
@@ -29,21 +29,32 @@ class TestMINC2(unittest.TestCase):
                     pass
 
     def test_getlen(self):
-        self.assertEqual(len(self.minc[0]), len(self.minc[0].volume))
-        self.assertEqual(len(self.minc[1]), len(self.minc[1].volume))
-
         for index, minc in enumerate(self.minc):
             with self.subTest(index=index):
-                self.assertEqual(len(minc), self.VALID_LENGTH[2])
+                self.assertEqual(len(minc), np.sum(self.LENGTH))
 
     def test_getitem(self):
         for index, minc in enumerate(self.minc):
             with self.subTest(index=index):
-                self.assertLessEqual(minc[0].max(), +1.0)
-                self.assertGreaterEqual(minc[0].min(), -1.0)
+                self.assertLessEqual(minc[0].max(), 1.0)
+                self.assertGreaterEqual(minc[0].min(), 0.0)
+
+                np.testing.assert_array_equal(minc[0], minc.volume[0])
+                np.testing.assert_array_equal(minc[self.LENGTH[2]-1],
+                    minc.volume[self.LENGTH[2]-1])
+
+                np.testing.assert_array_equal(minc[self.LENGTH[2]],
+                    np.flipud(minc.volume[:, 0]))
+                np.testing.assert_array_equal(minc[np.sum(self.LENGTH[1:3])-1],
+                    np.flipud(minc.volume[:, self.LENGTH[1]-1]))
+
+                np.testing.assert_array_equal(minc[np.sum(self.LENGTH[1:3])],
+                    np.flipud(minc.volume[:, :, 0]))
+                np.testing.assert_array_equal(minc[np.sum(self.LENGTH)-1],
+                    np.flipud(minc.volume[:, :, self.LENGTH[0]-1]))
 
                 with self.assertRaises(IndexError):
-                    minc[self.VALID_RANGES[2]]
+                    minc[np.sum(self.LENGTH)]
 
 class TestMNIBITE(unittest.TestCase):
 
@@ -60,11 +71,11 @@ class TestMNIBITE(unittest.TestCase):
 
     def test_getitem(self):
         def transform(mr, us):
-            testing.assert_array_equal(mr, self.mnibite.mr[0])
-            testing.assert_array_equal(us, self.mnibite.us[1])
+            np.testing.assert_array_equal(mr, self.mnibite.mr[0])
+            np.testing.assert_array_equal(us, self.mnibite.us[1])
             return 1, 2
-        testing.assert_array_equal(self.mnibite[0][0], self.mnibite.mr[0])
-        testing.assert_array_equal(self.mnibite[0][1], self.mnibite.us[0])
+        np.testing.assert_array_equal(self.mnibite[0][0], self.mnibite.mr[0])
+        np.testing.assert_array_equal(self.mnibite[0][1], self.mnibite.us[0])
         with self.assertRaises(IndexError):
             self.mnibite[len(self.mnibite)]
         self.mnibite.transform = transform
