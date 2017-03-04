@@ -73,10 +73,10 @@ def main(args):
 
     test_loader = data.DataLoader(dataset.MNIBITEFolder(
         map(lambda d: os.path.join(args.datadir, d), args.test)),
-            shuffle=True, batch_size=128)
+            shuffle=True, batch_size=128, num_workers=4)
     train_loader = data.DataLoader(dataset.MNIBITEFolder(
         map(lambda d: os.path.join(args.datadir, d), args.train)),
-            shuffle=True, batch_size=1)
+            shuffle=True, batch_size=1, num_workers=4)
 
     test_losses = []
     train_losses = []
@@ -126,6 +126,8 @@ def main(args):
 
         print(f'testing (epoch: {epoch}, loss: {test_loss}')
         print(f'training (epoch: {epoch}, loss: {train_loss})')
+
+    input('press key to complete')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
