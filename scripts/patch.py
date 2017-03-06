@@ -10,12 +10,12 @@ from mrtous import dataset
 from skimage import io, util, exposure
 
 def image_to_patches(image, size):
-    stride = int(np.ceil(.5*size))
+    stride = int(np.ceil(.3*size))
     patches = util.view_as_windows(image, size, stride)
     return np.reshape(patches, [-1, size, size])
 
 def main(args):
-    mnibite = dataset.MNIBITE(args.datadir, args.dataset)
+    mnibite = dataset.MNIBITENative(args.datadir, args.dataset)
 
     targetdir = os.path.join(args.targetdir, f'{args.dataset:02d}')
     targetsum = args.threshold*args.targetsize**2
@@ -47,6 +47,6 @@ if __name__ == '__main__':
     parser.add_argument('--targetdir', type=str, nargs='?')
     parser.add_argument('--targetsize', type=int, nargs='?')
     parser.set_defaults(datadir='mnibite', targetdir='mnibite',
-        targetsize=30, threshold=.15)
+        targetsize=25, threshold=.1)
 
     main(parser.parse_args())
