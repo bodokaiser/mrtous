@@ -76,7 +76,7 @@ def image_plot(title, subtitles, rows=1, cols=3):
     return update
 
 def main(args):
-    model = network.Basic()
+    model = network.Simple()
 
     test_loader = data.DataLoader(dataset.MNIBITEFolder(
         map(lambda d: os.path.join(args.datadir, d), args.test)),
