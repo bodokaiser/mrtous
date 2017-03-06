@@ -59,8 +59,8 @@ This will train a simple model with 30 epochs and show you live udpates
 on loss and rendered images.
 
 ```shell
-python3 main.py --plot-images --plot-loss
+python3 -W ignore main.py --show-loss --show-images --show-patches --train 12 13
 ```
 
-![Result1](https://cloud.githubusercontent.com/assets/1780466/23397311/4249227e-fd98-11e6-9de5-1b4e5213f2a1.png)
-![Result2](https://cloud.githubusercontent.com/assets/1780466/23397313/44265e40-fd98-11e6-99c5-695585debeb8.png)
+![images](https://cloud.githubusercontent.com/assets/1780466/23622246/3840871c-029e-11e7-840e-bab8f55a4c0f.png)
+![patches](https://cloud.githubusercontent.com/assets/1780466/23622248/3a23ff96-029e-11e7-8d3a-6cba2238a966.png)
