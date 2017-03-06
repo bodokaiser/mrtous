@@ -13,7 +13,7 @@ class MINC2(Dataset):
 
     AXES = ['x', 'y', 'z']
 
-    def __init__(self, filename, axis):
+    def __init__(self, filename, axis='z'):
         if not axis in self.AXES:
             raise ValueError('axis must be "x", "y" or "z"')
         self.axis = axis
@@ -54,7 +54,7 @@ class MNIBITENative(Dataset):
 
 class MNIBITEFolder(Dataset):
 
-    def __init__(self, root):
+    def __init__(self, root, transform=None, target_transform=None):
         if type(root) is str:
             root = [root]
 
@@ -71,9 +71,17 @@ class MNIBITEFolder(Dataset):
 
         assert(len(self.mr_fnames) == len(self.us_fnames))
 
+        self.transform = transform
+        self.target_transform = target_transform
+
     def __getitem__(self, index):
         mr = sk.img_as_float(io.imread(self.mr_fnames[index]))
         us = sk.img_as_float(io.imread(self.us_fnames[index]))
+
+        if self.transform is not None:
+            mr = self.transform(mr)
+        if self.target_transform is not None:
+            us = self.target_transform(us)
 
         return mr.astype(np.float32), us.astype(np.float32)
 

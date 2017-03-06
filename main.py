@@ -5,6 +5,7 @@ import numpy as np
 from mrtous import dataset, transform, network
 from torch import nn, optim, autograd
 from torch.utils import data
+from torchvision import transforms
 from matplotlib import pyplot as plt
 from mpl_toolkits import axes_grid1
 
@@ -55,7 +56,6 @@ def image_plot(title, subtitles, rows=1, cols=3):
             for i in range(len(images)):
                 axis = grid[i]
                 axis.set_axis_off()
-                axis.set_aspect('auto')
                 axes.append(axis)
                 imgs.append(axis.imshow(images[i],
                     interpolation='none', vmin=VMIN, vmax=VMAX))
@@ -66,6 +66,7 @@ def image_plot(title, subtitles, rows=1, cols=3):
         else:
             for i in range(len(images)):
                 imgs[i].set_data(images[i])
+                axes[i].set_aspect('auto')
                 axes[i].figure.canvas.draw()
                 axes[i].figure.canvas.flush_events()
 
@@ -81,7 +82,14 @@ def main(args):
         map(lambda d: os.path.join(args.datadir, d), args.test)),
             shuffle=True, batch_size=128, num_workers=4)
     train_loader = data.DataLoader(dataset.MNIBITEFolder(
-        map(lambda d: os.path.join(args.datadir, d), args.train)),
+        map(lambda d: os.path.join(args.datadir, d), args.train),
+            transform=transforms.Compose([
+                # for some reason not using this gives better performance
+                #transform.RandomZoom(),
+                #transform.RandomRotate(),
+                transform.RandomFlipUpDown(),
+                transform.RandomFlipLeftRight(),
+            ])),
             shuffle=True, batch_size=128, num_workers=4)
 
     if args.show_images:
