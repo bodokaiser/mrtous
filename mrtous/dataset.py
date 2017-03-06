@@ -6,37 +6,40 @@ import skimage as sk
 from skimage import io, util
 from torch.utils.data import Dataset
 
+def normalize(value, vrange):
+    return (np.array(value, np.float32)-np.min(vrange)) / np.sum(np.abs(vrange))
+
 class MINC2(Dataset):
 
-    def __init__(self, filename):
+    AXES = ['x', 'y', 'z']
+
+    def __init__(self, filename, axis):
+        if not axis in self.AXES:
+            raise ValueError('axis must be "x", "y" or "z"')
+        self.axis = axis
+
         with h5py.File(filename, 'r') as f:
             self.volume = f['minc-2.0/image/0/image']
             self.vrange = f['minc-2.0/image/0/image'].attrs['valid_range']
-            self.xlength = f['minc-2.0/dimensions/xspace'].attrs['length']
-            self.ylength = f['minc-2.0/dimensions/yspace'].attrs['length']
-            self.zlength = f['minc-2.0/dimensions/zspace'].attrs['length']
-            self.volume = np.array(self.volume, np.float32)
-            self.volume -= np.min(self.vrange)
-            self.volume /= np.sum(np.abs(self.vrange))
+            self.length = f['minc-2.0/dimensions/'+axis+'space'].attrs['length']
+            self.volume = normalize(self.volume, self.vrange)
 
     def __len__(self):
-        return self.xlength + self.ylength + self.zlength
+        return self.length
 
     def __getitem__(self, index):
-        if index < self.zlength:
+        if self.axis == self.AXES[2]:
             return self.volume[index]
-        if index < self.ylength + self.zlength:
-            return np.flipud(self.volume[:, index-self.zlength])
-        if index < self.xlength + self.ylength + self.zlength:
-            return np.flipud(self.volume[:, :, index-self.ylength-self.zlength])
-
-        raise IndexError('invalid index')
+        if self.axis == self.AXES[1]:
+            return np.flipud(self.volume[:, index])
+        if self.axis == self.AXES[0]:
+            return np.flipud(self.volume[:, :, index])
 
 class MNIBITENative(Dataset):
 
-    def __init__(self, root, id, transform=None):
-        self.mr = MINC2(os.path.join(root, f'{id:02d}_mr.mnc'))
-        self.us = MINC2(os.path.join(root, f'{id:02d}_us.mnc'))
+    def __init__(self, root, id, transform=None, axis='z'):
+        self.mr = MINC2(os.path.join(root, f'{id:02d}_mr.mnc'), axis)
+        self.us = MINC2(os.path.join(root, f'{id:02d}_us.mnc'), axis)
         self.transform = transform
 
     def __getitem__(self, index):

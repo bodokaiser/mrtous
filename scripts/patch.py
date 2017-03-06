@@ -15,29 +15,36 @@ def image_to_patches(image, size):
     return np.reshape(patches, [-1, size, size])
 
 def main(args):
-    mnibite = dataset.MNIBITENative(args.datadir, args.dataset)
+    mnibites = [
+        dataset.MNIBITENative(args.datadir, args.dataset, axis='x'),
+        dataset.MNIBITENative(args.datadir, args.dataset, axis='y'),
+        dataset.MNIBITENative(args.datadir, args.dataset, axis='z'),
+    ]
 
     targetdir = os.path.join(args.targetdir, f'{args.dataset:02d}')
     targetsum = args.threshold*args.targetsize**2
 
     os.makedirs(targetdir, exist_ok=True)
 
-    for _, (mr_image, us_image) in enumerate(mnibite):
-        mr_patches = image_to_patches(mr_image, args.targetsize)
-        us_patches = image_to_patches(us_image, args.targetsize)
+    for mnibite in mnibites:
+        for _, (mr_image, us_image) in enumerate(mnibite):
+            mr_patches = image_to_patches(mr_image, args.targetsize)
+            us_patches = image_to_patches(us_image, args.targetsize)
 
-        indices, = np.where(us_patches.sum((1, 2)) > targetsum)
+            indices, = np.where(us_patches.sum((1, 2)) > targetsum)
 
-        for index in indices:
-            mr_patch = sk.img_as_uint(
-                exposure.rescale_intensity(mr_patches[index], out_range='float'))
-            us_patch = sk.img_as_uint(
-                exposure.rescale_intensity(us_patches[index], out_range='float'))
+            for index in indices:
+                mr_patch = sk.img_as_uint(
+                    exposure.rescale_intensity(mr_patches[index],
+                        out_range='float'))
+                us_patch = sk.img_as_uint(
+                    exposure.rescale_intensity(us_patches[index],
+                        out_range='float'))
 
-            io.imsave(os.path.join(targetdir, f'{index}_mr.png'),
-                mr_patch, plugin='freeimage')
-            io.imsave(os.path.join(targetdir, f'{index}_us.png'),
-                us_patch, plugin='freeimage')
+                io.imsave(os.path.join(targetdir, f'{index}_mr.png'),
+                    mr_patch, plugin='freeimage')
+                io.imsave(os.path.join(targetdir, f'{index}_us.png'),
+                    us_patch, plugin='freeimage')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

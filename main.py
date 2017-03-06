@@ -80,6 +80,11 @@ def var(mr, us):
     targets = autograd.Variable(us).unsqueeze(1)
     return inputs, targets
 
+def sample(loader):
+    for _, (mr, us) in enumerate(loader):
+        if np.any(us.numpy()) and sum(us.numpy().shape[1:3]) > 30:
+            return var(mr, us)
+
 def main(args):
     model = network.Basic()
 
@@ -88,7 +93,9 @@ def main(args):
             shuffle=True, batch_size=128, num_workers=4)
     train_loader = data.DataLoader(dataset.MNIBITEFolder(
         map(lambda d: os.path.join(args.datadir, d), args.train)),
-            shuffle=True, batch_size=1, num_workers=4)
+            shuffle=True, batch_size=128, num_workers=4)
+    image_loader = data.DataLoader(dataset.MNIBITENative(args.datadir,
+        int(args.train[0]), transform.RegionCrop()), shuffle=True)
 
     test_losses = []
     train_losses = []
@@ -143,7 +150,14 @@ def main(args):
             update_loss(train_losses, test_losses)
 
         if args.show_image:
-            update_image([train_patches, train_patches, test_patches])
+            inputs, targets = sample(image_loader)
+            results = model(inputs)
+
+            update_image([[
+                inputs.data[0][0].numpy(),
+                targets.data[0][0].numpy(),
+                results.data[0][0].numpy(),
+            ], train_patches, test_patches])
 
         print(f'testing (epoch: {epoch}, loss: {test_loss}')
         print(f'training (epoch: {epoch}, loss: {train_loss})')
