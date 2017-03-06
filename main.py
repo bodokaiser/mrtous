@@ -5,8 +5,8 @@ import numpy as np
 from mrtous import dataset, transform, network
 from torch import nn, optim, autograd
 from torch.utils import data
-from matplotlib import lines
 from matplotlib import pyplot as plt
+from mpl_toolkits import axes_grid1
 
 VMIN = 0.0
 VMAX = 1.0
@@ -40,23 +40,35 @@ def loss_plot():
 
     return update
 
-def image_plot(titles):
-    fig, axes = plt.subplots(1, len(titles))
+def image_plot(titles, subtitles):
+    fig = plt.figure(1, (10, 10))
+    grid = axes_grid1.ImageGrid(fig, 111, (3, 3), axes_pad=.1,
+        cbar_mode='single', cbar_location='right', label_mode=1)
 
-    img = []
+    imgs = []
+    axes = []
 
     def update(images):
-        if len(img) == 0:
+        if len(imgs) == 0:
             for i in range(len(titles)):
-                axes[i].set_title(titles[i])
-                img.append(axes[i].imshow(images[i],
-                    interpolation='none', vmin=VMIN, vmax=VMAX))
-            fig.colorbar(img[0], fraction=.046, pad=.04)
+                for j in range(len(subtitles)):
+                    axis = grid[3*i+j]
+                    axis.set_axis_off()
+                    axes.append(axis)
+                    imgs.append(axis.imshow(images[i][j],
+                        interpolation='none', vmin=VMIN, vmax=VMAX))
+            grid[0].cax.colorbar(imgs[0])
+            grid[0].set_title(subtitles[0])
+            grid[1].set_title(subtitles[1])
+            grid[2].set_title(subtitles[2])
+            grid[3].set_title(titles[1], rotation='vertical', x=-.1, y=+.7)
+            grid[6].set_title(titles[2], rotation='vertical', x=-.1, y=+.7)
         else:
             for i in range(len(titles)):
-                img[i].set_data(images[i])
-                axes[i].figure.canvas.draw()
-                axes[i].figure.canvas.flush_events()
+                for j in range(len(subtitles)):
+                    imgs[3*i+j].set_data(images[i][j])
+                    axes[3*i+j].figure.canvas.draw()
+                    axes[3*i+j].figure.canvas.flush_events()
 
     plt.ion()
     plt.show()
@@ -87,7 +99,9 @@ def main(args):
     if args.show_loss:
         update_loss = loss_plot()
     if args.show_image:
-        update_image = image_plot(['MR', 'US', 'RE'])
+        update_image = image_plot(
+            ['training image', 'training patch', 'testing patch'],
+            ['MRI', 'US', 'RE'])
 
     for epoch in range(1, args.epochs+1):
         test_loss = 0
@@ -104,12 +118,12 @@ def main(args):
 
             train_loss += loss.data[0]
 
-        if args.show_image:
-            update_image([
-                inputs.data[0][0].numpy(),
-                targets.data[0][0].numpy(),
-                results.data[0][0].numpy(),
-            ])
+        train_patches = [
+            inputs.data[0][0].numpy(),
+            targets.data[0][0].numpy(),
+            results.data[0][0].numpy(),
+        ]
+        train_losses.append(train_loss)
 
         for step, (mr, us) in enumerate(test_loader):
             inputs, targets = var(mr, us)
@@ -118,16 +132,23 @@ def main(args):
             loss = criterion(results, targets)
             test_loss += loss.data[0]
 
+        test_patches = [
+            inputs.data[0][0].numpy(),
+            targets.data[0][0].numpy(),
+            results.data[0][0].numpy(),
+        ]
         test_losses.append(test_loss)
-        train_losses.append(train_loss)
 
         if args.show_loss:
             update_loss(train_losses, test_losses)
 
+        if args.show_image:
+            update_image([train_patches, train_patches, test_patches])
+
         print(f'testing (epoch: {epoch}, loss: {test_loss}')
         print(f'training (epoch: {epoch}, loss: {train_loss})')
 
-    input('press key to complete')
+    input('press enter to exit')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
