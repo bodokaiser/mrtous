@@ -74,16 +74,6 @@ def image_plot(title, subtitles, rows=1, cols=3):
 
     return update
 
-def var(mr, us):
-    inputs = autograd.Variable(mr).unsqueeze(1)
-    targets = autograd.Variable(us).unsqueeze(1)
-    return inputs, targets
-
-def sample(loader):
-    for _, (mr, us) in enumerate(loader):
-        if np.any(us.numpy()) and sum(us.numpy().shape[1:3]) > 30:
-            return var(mr, us)
-
 def main(args):
     model = network.Basic()
 
@@ -118,7 +108,8 @@ def main(args):
         train_loss = 0
 
         for step, (mr, us) in enumerate(train_loader):
-            inputs, targets = var(mr, us)
+            inputs = autograd.Variable(mr).unsqueeze(1)
+            targets = autograd.Variable(us).unsqueeze(1)
             results = model(inputs)
 
             optimizer.zero_grad()
@@ -136,7 +127,8 @@ def main(args):
         train_losses.append(train_loss)
 
         for step, (mr, us) in enumerate(test_loader):
-            inputs, targets = var(mr, us)
+            inputs = autograd.Variable(mr).unsqueeze(1)
+            targets = autograd.Variable(us).unsqueeze(1)
             results = model(inputs)
 
             loss = criterion(results, targets)
@@ -152,8 +144,12 @@ def main(args):
         if args.show_loss:
             update_loss(train_losses, test_losses)
         if args.show_images:
-            inputs, targets = sample(image_loader)
-            results = model(inputs)
+            for _, (mr, us) in enumerate(image_loader):
+                if np.any(us.numpy()) and sum(us.numpy().shape[1:3]) > 30:
+                    inputs = autograd.Variable(mr).unsqueeze(1)
+                    targets = autograd.Variable(us).unsqueeze(1)
+                    results = model(inputs)
+                    break
 
             update_images([
                 inputs.data[0][0].numpy(),
