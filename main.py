@@ -17,7 +17,7 @@ def loss_plot():
     lin1, = axes.plot([], [], color='orange', label='training')
     lin2, = axes.plot([], [], color='blue', label='testing')
 
-    axes.set_title('mean-squared-error per epoch')
+    axes.set_title('MSE per Epoch')
     axes.set_xlabel('epoch')
     axes.set_ylabel('mse')
     axes.legend()
@@ -40,9 +40,11 @@ def loss_plot():
 
     return update
 
-def image_plot(titles, subtitles):
-    fig = plt.figure(1, (10, 10))
-    grid = axes_grid1.ImageGrid(fig, 111, (3, 3), axes_pad=.1,
+def image_plot(title, subtitles, rows=1, cols=3):
+    fig = plt.figure(figsize=(8, 4))
+    fig.suptitle(title)
+
+    grid = axes_grid1.ImageGrid(fig, 111, (rows, cols), axes_pad=.1,
         cbar_mode='single', cbar_location='right', label_mode=1)
 
     imgs = []
@@ -50,25 +52,22 @@ def image_plot(titles, subtitles):
 
     def update(images):
         if len(imgs) == 0:
-            for i in range(len(titles)):
-                for j in range(len(subtitles)):
-                    axis = grid[3*i+j]
-                    axis.set_axis_off()
-                    axes.append(axis)
-                    imgs.append(axis.imshow(images[i][j],
-                        interpolation='none', vmin=VMIN, vmax=VMAX))
+            for i in range(len(images)):
+                axis = grid[i]
+                axis.set_axis_off()
+                axis.set_aspect('auto')
+                axes.append(axis)
+                imgs.append(axis.imshow(images[i],
+                    interpolation='none', vmin=VMIN, vmax=VMAX))
+
             grid[0].cax.colorbar(imgs[0])
-            grid[0].set_title(subtitles[0])
-            grid[1].set_title(subtitles[1])
-            grid[2].set_title(subtitles[2])
-            grid[3].set_title(titles[1], rotation='vertical', x=-.1, y=+.7)
-            grid[6].set_title(titles[2], rotation='vertical', x=-.1, y=+.7)
+            for i, subtitle in enumerate(subtitles):
+                grid[i].set_title(subtitle)
         else:
-            for i in range(len(titles)):
-                for j in range(len(subtitles)):
-                    imgs[3*i+j].set_data(images[i][j])
-                    axes[3*i+j].figure.canvas.draw()
-                    axes[3*i+j].figure.canvas.flush_events()
+            for i in range(len(images)):
+                imgs[i].set_data(images[i])
+                axes[i].figure.canvas.draw()
+                axes[i].figure.canvas.flush_events()
 
     plt.ion()
     plt.show()
@@ -94,8 +93,10 @@ def main(args):
     train_loader = data.DataLoader(dataset.MNIBITEFolder(
         map(lambda d: os.path.join(args.datadir, d), args.train)),
             shuffle=True, batch_size=128, num_workers=4)
-    image_loader = data.DataLoader(dataset.MNIBITENative(args.datadir,
-        int(args.train[0]), transform.RegionCrop()), shuffle=True)
+
+    if args.show_images:
+        image_loader = data.DataLoader(dataset.MNIBITENative(args.datadir,
+            int(args.train[0]), transform.RegionCrop()), shuffle=True)
 
     test_losses = []
     train_losses = []
@@ -105,10 +106,12 @@ def main(args):
 
     if args.show_loss:
         update_loss = loss_plot()
-    if args.show_image:
-        update_image = image_plot(
-            ['training image', 'training patch', 'testing patch'],
+    if args.show_images:
+        update_images = image_plot('training images',
             ['MRI', 'US', 'RE'])
+    if args.show_patches:
+        update_patches = image_plot('training and testing patches',
+            ['MRI', 'US', 'RE'], rows=2)
 
     for epoch in range(1, args.epochs+1):
         test_loss = 0
@@ -148,16 +151,20 @@ def main(args):
 
         if args.show_loss:
             update_loss(train_losses, test_losses)
-
-        if args.show_image:
+        if args.show_images:
             inputs, targets = sample(image_loader)
             results = model(inputs)
 
-            update_image([[
+            update_images([
                 inputs.data[0][0].numpy(),
                 targets.data[0][0].numpy(),
                 results.data[0][0].numpy(),
-            ], train_patches, test_patches])
+            ])
+        if args.show_patches:
+            update_patches([
+                *train_patches,
+                *test_patches,
+            ])
 
         print(f'testing (epoch: {epoch}, loss: {test_loss}')
         print(f'training (epoch: {epoch}, loss: {train_loss})')
@@ -171,5 +178,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, nargs='?', default=20)
     parser.add_argument('--datadir', type=str, nargs='?', default='mnibite')
     parser.add_argument('--show-loss', dest='show_loss', action='store_true')
-    parser.add_argument('--show-image', dest='show_image', action='store_true')
+    parser.add_argument('--show-images', dest='show_images', action='store_true')
+    parser.add_argument('--show-patches', dest='show_patches', action='store_true')
+    parser.set_defaults(show_loss=False, show_images=False, show_patches=False)
     main(parser.parse_args())
