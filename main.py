@@ -78,23 +78,10 @@ def image_plot(title, subtitles, rows=1, cols=3):
 def main(args):
     model = network.Simple()
 
-    test_loader = data.DataLoader(dataset.MNIBITEFolder(
-        map(lambda d: os.path.join(args.datadir, d), args.test)),
-            shuffle=True, batch_size=128, num_workers=4)
-    train_loader = data.DataLoader(dataset.MNIBITEFolder(
-        map(lambda d: os.path.join(args.datadir, d), args.train),
-            transform=transforms.Compose([
-                # for some reason not using this gives better performance
-                #transform.RandomZoom(),
-                #transform.RandomRotate(),
-                transform.RandomFlipUpDown(),
-                transform.RandomFlipLeftRight(),
-            ])),
-            shuffle=True, batch_size=128, num_workers=4)
-
-    if args.show_images:
-        image_loader = data.DataLoader(dataset.MNIBITENative(args.datadir,
-            int(args.train[0]), transform.RegionCrop()), shuffle=True)
+    test_loader = data.DataLoader(dataset.MNIBITENative(args.datadir,
+        int(args.test[0]), transform.RegionCrop()), shuffle=True)
+    train_loader = data.DataLoader(dataset.MNIBITENative(args.datadir,
+        int(args.train[0]), transform.RegionCrop()), shuffle=True)
 
     test_losses = []
     train_losses = []
@@ -105,15 +92,19 @@ def main(args):
     if args.show_loss:
         update_loss = loss_plot()
     if args.show_images:
-        update_images = image_plot('training images',
-            ['MRI', 'US', 'RE'])
-    if args.show_patches:
-        update_patches = image_plot('training and testing patches',
-            ['MRI', 'US', 'RE'], rows=2)
+        update_images = image_plot('Training Images', ['MRI', 'US', 'OUT'])
 
     for epoch in range(1, args.epochs+1):
         test_loss = 0
         train_loss = 0
+
+        for step, (mr, us) in enumerate(test_loader):
+            inputs = autograd.Variable(mr).unsqueeze(1)
+            targets = autograd.Variable(us).unsqueeze(1)
+            results = model(inputs)
+
+            loss = criterion(results, targets)
+            test_loss += loss.data[0]
 
         for step, (mr, us) in enumerate(train_loader):
             inputs = autograd.Variable(mr).unsqueeze(1)
@@ -127,47 +118,16 @@ def main(args):
 
             train_loss += loss.data[0]
 
-        train_patches = [
-            inputs.data[0][0].numpy(),
-            targets.data[0][0].numpy(),
-            results.data[0][0].numpy(),
-        ]
-        train_losses.append(train_loss)
-
-        for step, (mr, us) in enumerate(test_loader):
-            inputs = autograd.Variable(mr).unsqueeze(1)
-            targets = autograd.Variable(us).unsqueeze(1)
-            results = model(inputs)
-
-            loss = criterion(results, targets)
-            test_loss += loss.data[0]
-
-        test_patches = [
-            inputs.data[0][0].numpy(),
-            targets.data[0][0].numpy(),
-            results.data[0][0].numpy(),
-        ]
         test_losses.append(test_loss)
+        train_losses.append(train_loss)
 
         if args.show_loss:
             update_loss(train_losses, test_losses)
         if args.show_images:
-            for _, (mr, us) in enumerate(image_loader):
-                if np.any(us.numpy()) and sum(us.numpy().shape[1:3]) > 30:
-                    inputs = autograd.Variable(mr).unsqueeze(1)
-                    targets = autograd.Variable(us).unsqueeze(1)
-                    results = model(inputs)
-                    break
-
             update_images([
                 inputs.data[0][0].numpy(),
                 targets.data[0][0].numpy(),
                 results.data[0][0].numpy(),
-            ])
-        if args.show_patches:
-            update_patches([
-                *train_patches,
-                *test_patches,
             ])
 
         print(f'testing (epoch: {epoch}, loss: {test_loss}')
@@ -183,6 +143,5 @@ if __name__ == '__main__':
     parser.add_argument('--datadir', type=str, nargs='?', default='mnibite')
     parser.add_argument('--show-loss', dest='show_loss', action='store_true')
     parser.add_argument('--show-images', dest='show_images', action='store_true')
-    parser.add_argument('--show-patches', dest='show_patches', action='store_true')
-    parser.set_defaults(show_loss=False, show_images=False, show_patches=False)
+    parser.set_defaults(show_loss=False, show_images=False)
     main(parser.parse_args())
