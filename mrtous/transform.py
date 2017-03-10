@@ -2,13 +2,38 @@ import random
 import numpy as np
 import scipy as sp
 
-from skimage import filters, transform
+import skimage.filters
+import skimage.transform
+
+class Normalize(object):
+
+    def __init__(self, vrange):
+        self.vrange = vrange
+
+    def __call__(self, image):
+        image -= np.min(self.vrange)
+        image /= np.sum(np.abs(self.vrange))
+        return image
+
+class CenterCrop(object):
+
+    def __init__(self, size):
+        self.width = size
+        self.height = size
+
+    def __call__(self, image):
+        xlen, ylen = image.shape
+
+        xoff = xlen // 2 - self.width // 2
+        yoff = ylen // 2 - self.height // 2
+
+        return image[xoff:xoff+self.width, yoff:yoff+self.height]
 
 class RegionCrop(object):
 
     def __call__(self, mr, us):
         if np.any(mr) and np.any(us):
-            mask = us > filters.threshold_otsu(us)
+            mask = us > skimage.filters.threshold_otsu(us)
 
             x = np.where(np.any(mask, 0))[0][[0, -1]]
             y = np.where(np.any(mask, 1))[0][[0, -1]]
@@ -27,7 +52,7 @@ class RandomFlip(object):
     def __call__(self, image):
         if random.random() > .5:
             image = np.flipud(image)
-        if random.random() > .5
+        if random.random() > .5:
             image = np.fliplr(image)
         return image
 

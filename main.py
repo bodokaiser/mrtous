@@ -2,10 +2,9 @@ import os
 import argparse
 import numpy as np
 
-from mrtous import dataset, transform, network
+from mrtous import dataset, network
 from torch import nn, optim, autograd
 from torch.utils import data
-from torchvision import transforms
 from matplotlib import pyplot as plt
 from mpl_toolkits import axes_grid1
 
@@ -78,11 +77,12 @@ def image_plot(title, subtitles, rows=1, cols=3):
 def main(args):
     model = network.Basic()
     model.apply(network.normal_init)
+    model.double()
 
     test_loader = data.DataLoader(dataset.MNIBITENative(args.datadir,
-        int(args.test[0]), transform.RegionCrop()), shuffle=True)
+        int(args.test[0])), shuffle=True)
     train_loader = data.DataLoader(dataset.MNIBITENative(args.datadir,
-        int(args.train[0]), transform.RegionCrop()), shuffle=True)
+        int(args.train[0])), shuffle=True)
 
     test_losses = []
     train_losses = []
