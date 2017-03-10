@@ -76,7 +76,8 @@ def image_plot(title, subtitles, rows=1, cols=3):
     return update
 
 def main(args):
-    model = network.Simple()
+    model = network.Basic()
+    model.apply(network.normal_init)
 
     test_loader = data.DataLoader(dataset.MNIBITENative(args.datadir,
         int(args.test[0]), transform.RegionCrop()), shuffle=True)
