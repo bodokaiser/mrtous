@@ -22,17 +22,12 @@ class RegionCrop(object):
 
         return mr, us
 
-class RandomFlipUpDown(object):
+class RandomFlip(object):
 
     def __call__(self, image):
         if random.random() > .5:
             image = np.flipud(image)
-        return image
-
-class RandomFlipLeftRight(object):
-
-    def __call__(self, image):
-        if random.random() > .5:
+        if random.random() > .5
             image = np.fliplr(image)
         return image
 

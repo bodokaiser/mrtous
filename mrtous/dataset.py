@@ -38,9 +38,9 @@ class MINC2(Dataset):
 class MNIBITENative(Dataset):
 
     def __init__(self, root, id, transform=None, axis='z'):
+        self.axis = axis
         self.mr = MINC2(os.path.join(root, f'{id:02d}_mr.mnc'), axis)
         self.us = MINC2(os.path.join(root, f'{id:02d}_us.mnc'), axis)
-        self.axis = axis
         self.transform = transform
 
     def __getitem__(self, index):
