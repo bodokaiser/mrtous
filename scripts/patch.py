@@ -4,8 +4,6 @@ import argparse
 import numpy as np
 import skimage as sk
 
-sys.path.append('..')
-
 from mrtous import dataset
 from skimage import io, util, exposure
 
@@ -27,6 +25,8 @@ def main(args):
     os.makedirs(targetdir, exist_ok=True)
 
     for mnibite in mnibites:
+        axis = mnibite.axis
+
         for _, (mr_image, us_image) in enumerate(mnibite):
             mr_patches = image_to_patches(mr_image, args.targetsize)
             us_patches = image_to_patches(us_image, args.targetsize)
@@ -41,19 +41,17 @@ def main(args):
                     exposure.rescale_intensity(us_patches[index],
                         out_range='float'))
 
-                io.imsave(os.path.join(targetdir, f'{index}_mr.png'),
+                io.imsave(os.path.join(targetdir, f'{index}_{axis}_mr.png'),
                     mr_patch, plugin='freeimage')
-                io.imsave(os.path.join(targetdir, f'{index}_us.png'),
+                io.imsave(os.path.join(targetdir, f'{index}_{axis}_us.png'),
                     us_patch, plugin='freeimage')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=int, required=True)
-    parser.add_argument('--datadir', type=str, nargs='?')
-    parser.add_argument('--threshold', type=float, nargs='?')
-    parser.add_argument('--targetdir', type=str, nargs='?')
-    parser.add_argument('--targetsize', type=int, nargs='?')
-    parser.set_defaults(datadir='mnibite', targetdir='mnibite',
-        targetsize=25, threshold=.1)
+    parser.add_argument('--datadir', type=str, nargs='?', default='mnibite')
+    parser.add_argument('--targetdir', type=str, nargs='?', default='.')
+    parser.add_argument('--targetsize', type=int, nargs='?', default=25)
+    parser.add_argument('--threshold', type=float, nargs='?', default=.5)
 
     main(parser.parse_args())
