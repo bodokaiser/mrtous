@@ -78,19 +78,18 @@ class MNIBITEFolder(data.Dataset):
         for root in root:
             for fname in os.listdir(root):
                 fname = os.path.join(root, fname)
-                if fname.endswith('_mr.png'):
+                if fname.endswith('_mr.tif'):
                     self.mr_fnames.append(fname)
-                if fname.endswith('_us.png'):
+                if fname.endswith('_us.tif'):
                     self.us_fnames.append(fname)
-
         assert(len(self.mr_fnames) == len(self.us_fnames))
 
         self.input_transform = input_transform
         self.target_transform = target_transform
 
     def __getitem__(self, index):
-        mr = skimage.img_as_float(skimage.io.imread(self.mr_fnames[index]))
-        us = skimage.img_as_float(skimage.io.imread(self.us_fnames[index]))
+        mr = skimage.io.imread(self.mr_fnames[index])
+        us = skimage.io.imread(self.us_fnames[index])
 
         if self.input_transform is not None:
             mr = self.input_transform(mr)

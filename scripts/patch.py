@@ -1,15 +1,17 @@
 import os
 import sys
+import math
 import argparse
 import numpy as np
-import skimage as sk
+
+import skimage
+import skimage.io
+import skimage.util
 
 from mrtous import dataset
-from skimage import io, util, exposure
 
 def image_to_patches(image, size):
-    stride = int(np.ceil(.3*size))
-    patches = util.view_as_windows(image, size, stride)
+    patches = skimage.util.view_as_windows(image, size, int(math.ceil(.3*size)))
     return np.reshape(patches, [-1, size, size])
 
 def main(args):
@@ -34,17 +36,10 @@ def main(args):
             indices, = np.where(us_patches.sum((1, 2)) > targetsum)
 
             for index in indices:
-                mr_patch = sk.img_as_uint(
-                    exposure.rescale_intensity(mr_patches[index],
-                        out_range='float'))
-                us_patch = sk.img_as_uint(
-                    exposure.rescale_intensity(us_patches[index],
-                        out_range='float'))
-
-                io.imsave(os.path.join(targetdir, f'{index}_{axis}_mr.png'),
-                    mr_patch, plugin='freeimage')
-                io.imsave(os.path.join(targetdir, f'{index}_{axis}_us.png'),
-                    us_patch, plugin='freeimage')
+                skimage.io.imsave(os.path.join(targetdir,
+                    f'{index}_{axis}_mr.tif'), mr_patches[index])
+                skimage.io.imsave(os.path.join(targetdir,
+                    f'{index}_{axis}_us.tif'), us_patches[index])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
