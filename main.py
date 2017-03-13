@@ -2,11 +2,15 @@ import os
 import argparse
 import numpy as np
 
-from mrtous import dataset, network, transform
-from torch import nn, optim, autograd
-from torch.utils import data
-from matplotlib import pyplot as plt
-from mpl_toolkits import axes_grid1
+import torch.nn
+import torch.optim
+import torch.autograd
+import torch.utils.data
+
+import matplotlib.pyplot as plt
+import mpl_toolkits.axes_grid1 as axes_grid
+
+from mrtous import dataset, network, transform, criterion
 
 VMIN = 0.0
 VMAX = 1.0
@@ -44,7 +48,7 @@ def image_plot(title, subtitles, rows=1, cols=3):
     fig = plt.figure(figsize=(8, 4))
     fig.suptitle(title)
 
-    grid = axes_grid1.ImageGrid(fig, 111, (rows, cols), axes_pad=.1,
+    grid = axes_grid.ImageGrid(fig, 111, (rows, cols), axes_pad=.1,
         cbar_mode='single', cbar_location='right', label_mode=1)
 
     imgs = []
@@ -75,57 +79,36 @@ def image_plot(title, subtitles, rows=1, cols=3):
     return update
 
 def main(args):
-    model = network.Basic()
+    model = network.Basic().double()
     model.apply(network.normal_init)
-    model.double()
 
-    test_loader = data.DataLoader(dataset.MNIBITENative(args.datadir,
-        int(args.test[0])), shuffle=True)
-    train_loader = data.DataLoader(dataset.MNIBITENative(args.datadir,
-        int(args.train[0])), shuffle=True)
+    train_loader = torch.utils.data.DataLoader(dataset.MNIBITENative(
+        args.datadir, int(args.train[0])), shuffle=True)
 
     test_losses = []
     train_losses = []
 
-    criterion = nn.MSELoss(size_average=False)
-    optimizer = optim.Adam(model.parameters())
+    optimizer = torch.optim.Adam(model.parameters())
 
     if args.show_loss:
         update_loss = loss_plot()
     if args.show_images:
         update_images = image_plot('Training Images', ['MRI', 'US', 'OUT'])
 
-    threshold = transform.BinaryMask()
-
     for epoch in range(1, args.epochs+1):
         test_loss = 0
         train_loss = 0
 
-        for step, (mr, us) in enumerate(test_loader):
-            mask = threshold(us.numpy()[0])
-
-            if np.any(mask):
-                inputs = autograd.Variable(mr).unsqueeze(1)
-                targets = autograd.Variable(us).unsqueeze(1)
-                results = model(inputs)
-
-                loss = criterion(results, targets)
-                test_loss += loss.data[0]
-
         for step, (mr, us) in enumerate(train_loader):
-            mask = threshold(us.numpy()[0])
+            inputs = torch.autograd.Variable(mr).unsqueeze(1)
+            targets = torch.autograd.Variable(us).unsqueeze(1)
+            results = model(inputs)
 
-            if np.any(mask):
-                inputs = autograd.Variable(mr).unsqueeze(1)
-                targets = autograd.Variable(us).unsqueeze(1)
-                results = model(inputs)
+            loss = criterion.thresholded_elastic_loss(results, targets)
+            loss.backward()
+            optimizer.step()
 
-                optimizer.zero_grad()
-                loss = criterion(results, targets)
-                loss.backward()
-                optimizer.step()
-
-                train_loss += loss.data[0]
+            train_loss += loss.data[0]
 
         test_losses.append(test_loss)
         train_losses.append(train_loss)

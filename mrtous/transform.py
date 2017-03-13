@@ -29,13 +29,6 @@ class CenterCrop(object):
 
         return image[xoff:xoff+self.width, yoff:yoff+self.height]
 
-class BinaryMask(object):
-
-    def __call__(self, image):
-        if np.any(image):
-            return image > skimage.filters.threshold_otsu(image)
-        return np.zeros_like(image).astype(bool)
-
 class RandomFlip(object):
 
     def __call__(self, image):
