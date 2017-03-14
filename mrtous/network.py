@@ -15,6 +15,8 @@ class Basic(nn.Module):
         self.conv = nn.Conv2d(1, 3, 3, padding=1)
         self.conn = nn.Conv2d(3, 1, 1)
 
+        self.apply(normal_init)
+
     def forward(self, x):
         x = self.conv(x)
         x = self.conn(x)

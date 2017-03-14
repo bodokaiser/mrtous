@@ -1,19 +1,18 @@
-import os
 import argparse
 import numpy as np
-
+import os
+import torch
 import torch.nn
-import torch.optim
-import torch.autograd
-import torch.utils.data
 
-import matplotlib.pyplot as plt
-import mpl_toolkits.axes_grid1 as axes_grid
-
+from torch.optim import Adam
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from mrtous import dataset, network, transform
+from mrtous.network import Basic
+from mrtous.dataset import MnibiteNative
+
+from matplotlib import pyplot as plt
+from mpl_toolkits.axes_grid1 import ImageGrid
 
 VMIN = 0.0
 VMAX = 1.0
@@ -51,7 +50,7 @@ def image_plot(title, subtitles, rows=1, cols=3):
     fig = plt.figure(figsize=(8, 4))
     fig.suptitle(title)
 
-    grid = axes_grid.ImageGrid(fig, 111, (rows, cols), axes_pad=.1,
+    grid = ImageGrid(fig, 111, (rows, cols), axes_pad=.1,
         cbar_mode='single', cbar_location='right', label_mode=1)
 
     imgs = []
@@ -90,15 +89,19 @@ def threshold(image):
     return Variable(mask).double()
 
 def main(args):
-    model = network.Basic().double()
-    model.apply(network.normal_init)
+    model = Basic().double()
 
-    train_loader = DataLoader(dataset.MNIBITENative(args.datadir, 1))
+    dataset = MnibiteNative(args.datadir, int(args.train))
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+
+    mr, us = dataset[120]
+    fixed_inputs = Variable(torch.from_numpy(mr)).unsqueeze(0).unsqueeze(0)
+    fixed_targets = Variable(torch.from_numpy(us)).unsqueeze(0).unsqueeze(0)
 
     test_losses = []
     train_losses = []
 
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = Adam(model.parameters())
 
     if args.show_loss:
         update_loss = loss_plot()
@@ -109,10 +112,7 @@ def main(args):
         test_loss = 0
         train_loss = 0
 
-        loader = DataLoader(dataset.MNIBITENative(
-            args.datadir, 1), shuffle=True)
-
-        for _, (mr, us) in enumerate(loader):
+        for mr, us in dataloader:
             if np.any(us.numpy()) and us.sum() > 100:
                 mask = threshold(us.numpy())
 
@@ -135,9 +135,9 @@ def main(args):
             update_loss(train_losses, test_losses)
         if args.show_images:
             update_images([
-                inputs.data[0][0].numpy(),
-                targets.data[0][0].numpy(),
-                results.data[0][0].numpy(),
+                fixed_inputs.data[0][0].numpy(),
+                fixed_targets.data[0][0].numpy(),
+                model(fixed_inputs).data[0][0].numpy(),
             ])
 
         print(f'testing (epoch: {epoch}, loss: {test_loss}')
@@ -147,8 +147,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test', type=str, nargs='+', default=['11'])
-    parser.add_argument('--train', type=str, nargs='+', default=['13'])
+    parser.add_argument('--test', type=int, nargs='?', default=11)
+    parser.add_argument('--train', type=int, nargs='?', default=13)
     parser.add_argument('--epochs', type=int, nargs='?', default=20)
     parser.add_argument('--datadir', type=str, nargs='?', default='mnibite')
     parser.add_argument('--show-loss', dest='show_loss', action='store_true')
