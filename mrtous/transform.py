@@ -5,12 +5,21 @@ import scipy as sp
 import skimage.filters
 import skimage.transform
 
+class ExpandDim(object):
+
+    def __init__(self, axis):
+        self.axis = axis
+
+    def __call__(self, image):
+        return np.expand_dims(image, self.axis)
+
 class Normalize(object):
 
     def __init__(self, vrange):
-        self.vrange = vrange
+        self.vrange = vrange.astype(np.float32)
 
     def __call__(self, image):
+        image = image.astype(np.float32)
         image -= np.min(self.vrange)
         image /= np.sum(np.abs(self.vrange))
         return image

@@ -6,7 +6,7 @@ matplotlib ~= 2.0
 
 # pytorch
 git+https://github.com/pytorch/pytorch
-torchvision ~= 0.1
+git+https://github.com/pytorch/vision
 
 # preprocessing
 scikit-image ~= 0.12

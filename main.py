@@ -62,8 +62,8 @@ def image_plot(title, subtitles, rows=1, cols=3):
                 axis = grid[i]
                 axis.set_axis_off()
                 axes.append(axis)
-                imgs.append(axis.imshow(images[i],
-                    interpolation='none', vmin=VMIN, vmax=VMAX))
+                imgs.append(axis.imshow(images[i]))
+                #    interpolation='none', vmin=VMIN, vmax=VMAX))
 
             grid[0].cax.colorbar(imgs[0])
             for i, subtitle in enumerate(subtitles):
@@ -84,19 +84,21 @@ def threshold(image):
     value = np.mean(image) - 2*np.var(image)
 
     mask = image > value
-    mask = torch.from_numpy(mask.astype(int))
+    mask = torch.from_numpy(mask.astype(np.float32))
 
-    return Variable(mask).float()
+    return Variable(mask)
 
 def main(args):
     model = Basic()
 
-    dataset = MnibiteNative(args.datadir, int(args.train))
+    dataset = MnibiteNative(
+        os.path.join(args.datadir, f'{args.train:02d}_mr.mnc'),
+        os.path.join(args.datadir, f'{args.train:02d}_us.mnc'))
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
     mr, us = dataset[120]
-    fixed_inputs = Variable(torch.from_numpy(mr)).unsqueeze(0).unsqueeze(0)
-    fixed_targets = Variable(torch.from_numpy(us)).unsqueeze(0).unsqueeze(0)
+    fixed_inputs = Variable(mr).unsqueeze(0)
+    fixed_targets = Variable(us).unsqueeze(0)
 
     test_losses = []
     train_losses = []
@@ -113,11 +115,11 @@ def main(args):
         train_loss = 0
 
         for mr, us in dataloader:
-            if np.any(us.numpy()) and us.sum() > 100:
+            if us.sum() > 1:
                 mask = threshold(us.numpy())
 
-                inputs = Variable(mr).unsqueeze(1)
-                targets = Variable(us).unsqueeze(1)
+                inputs = Variable(mr)
+                targets = Variable(us)
                 results = model(inputs)
 
                 optimizer.zero_grad()
