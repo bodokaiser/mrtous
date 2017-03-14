@@ -24,7 +24,7 @@ class Minc2Z(Dataset):
         return self.volume.attrs['valid_range']
 
     def __getitem__(self, index):
-        return self.volume[index].astype(np.float64)
+        return self.volume[index].astype(np.float32)
 
     def __len__(self):
         return self.volume.shape[0]
@@ -32,7 +32,7 @@ class Minc2Z(Dataset):
 class Minc2Y(Minc2Z):
 
     def __getitem__(self, index):
-        return self.volume[:, index].astype(np.float64)
+        return self.volume[:, index].astype(np.float32)
 
     def __len__(self):
         return self.volume.shape[1]
@@ -40,7 +40,7 @@ class Minc2Y(Minc2Z):
 class Minc2X(Minc2Z):
 
     def __getitem__(self, index):
-        return self.volume[:, :, index].astype(np.float64)
+        return self.volume[:, :, index].astype(np.float32)
 
     def __len__(self):
         return self.volume.shape[2]

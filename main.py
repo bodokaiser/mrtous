@@ -86,10 +86,10 @@ def threshold(image):
     mask = image > value
     mask = torch.from_numpy(mask.astype(int))
 
-    return Variable(mask).double()
+    return Variable(mask).float()
 
 def main(args):
-    model = Basic().double()
+    model = Basic()
 
     dataset = MnibiteNative(args.datadir, int(args.train))
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
