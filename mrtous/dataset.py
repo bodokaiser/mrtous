@@ -10,7 +10,26 @@ from torchvision.transforms import Compose, ToTensor
 
 from mrtous.transform import Normalize, CenterCrop, ExpandDim
 
-class Minc2z(Dataset):
+class Concat(Dataset):
+
+    def __init__(self, datasets):
+        self.datasets = datasets
+        self.lengths = [len(d) for d in datasets]
+        self.offsets = np.cumsum(self.lengths)
+        self.length = np.sum(self.lengths)
+
+    def __getitem__(self, index):
+        for i, offset in enumerate(self.offsets):
+            if index < offset:
+                if i > 0:
+                    index -= self.offsets[i-1]
+                return self.datasets[i][index]
+        raise IndexError(f'{index} exceeds {self.length}')
+
+    def __len__(self):
+        return self.length
+
+class Minc2(Dataset):
 
     def __init__(self, filename):
         self.hdf = h5py.File(filename, 'r')
@@ -23,34 +42,36 @@ class Minc2z(Dataset):
     def vrange(self):
         return self.volume.attrs['valid_range']
 
-    def __getitem__(self, index):
-        return self.volume[index]
+    @property
+    def xlength(self):
+        return self.volume.shape[2]
 
-    def __len__(self):
-        return self.volume.shape[0]
-
-class Minc2y(Minc2z):
-
-    def __getitem__(self, index):
-        return self.volume[:, index]
-
-    def __len__(self):
+    @property
+    def ylength(self):
         return self.volume.shape[1]
 
-class Minc2x(Minc2z):
+    @property
+    def zlength(self):
+        return self.volume.shape[0]
 
     def __getitem__(self, index):
-        return self.volume[:, :, index]
+        if index < self.zlength:
+            return self.volume[index]
+        if index < self.zlength + self.ylength:
+            return self.volume[:, index - self.zlength]
+        if index < self.zlength + self.ylength + self.xlength:
+            return self.volume[:, :, index - self.zlength - self.ylength]
+        raise IndexError(f'index {index} exceeds {len(self)}')
 
     def __len__(self):
-        return self.volume.shape[2]
+        return sum(self.volume.shape)
 
 class MnibiteNative(Dataset):
 
     def __init__(self, mr_filename, us_filename,
         input_transform=None, target_transform=None):
-        self.mr = Minc2z(mr_filename)
-        self.us = Minc2z(us_filename)
+        self.mr = Minc2(mr_filename)
+        self.us = Minc2(us_filename)
         assert len(self.mr) == len(self.us)
 
         if input_transform is None:

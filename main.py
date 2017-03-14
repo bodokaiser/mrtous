@@ -9,13 +9,10 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from mrtous.network import Basic
-from mrtous.dataset import MnibiteNative
+from mrtous.dataset import Concat, MnibiteNative
 
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import ImageGrid
-
-VMIN = 0.0
-VMAX = 1.0
 
 def loss_plot():
     fig, axes = plt.subplots()
@@ -62,10 +59,9 @@ def image_plot(title, subtitles, rows=1, cols=3):
                 axis = grid[i]
                 axis.set_axis_off()
                 axes.append(axis)
-                imgs.append(axis.imshow(images[i]))
-                #    interpolation='none', vmin=VMIN, vmax=VMAX))
+                imgs.append(axis.imshow(images[i], interpolation='none'))
 
-            grid[0].cax.colorbar(imgs[0])
+            grid[0].cax.colorbar(imgs[len(images)-1])
             for i, subtitle in enumerate(subtitles):
                 grid[i].set_title(subtitle)
         else:
@@ -91,9 +87,12 @@ def threshold(image):
 def main(args):
     model = Basic()
 
-    dataset = MnibiteNative(
-        os.path.join(args.datadir, f'{args.train:02d}_mr.mnc'),
-        os.path.join(args.datadir, f'{args.train:02d}_us.mnc'))
+    dataset = Concat([
+        MnibiteNative(
+            os.path.join(args.datadir, f'{int(i):02d}_mr.mnc'),
+            os.path.join(args.datadir, f'{int(i):02d}_us.mnc'))
+        for i in args.train
+    ])
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
     mr, us = dataset[120]
@@ -149,8 +148,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test', type=int, nargs='?', default=11)
-    parser.add_argument('--train', type=int, nargs='?', default=13)
+    parser.add_argument('--test', nargs='+', default=['11'])
+    parser.add_argument('--train', nargs='+', default=['13'])
     parser.add_argument('--epochs', type=int, nargs='?', default=20)
     parser.add_argument('--datadir', type=str, nargs='?', default='mnibite')
     parser.add_argument('--show-loss', dest='show_loss', action='store_true')
