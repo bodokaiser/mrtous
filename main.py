@@ -10,7 +10,10 @@ import torch.utils.data
 import matplotlib.pyplot as plt
 import mpl_toolkits.axes_grid1 as axes_grid
 
-from mrtous import dataset, network, transform, criterion
+from torch.autograd import Variable
+from torch.utils.data import DataLoader
+
+from mrtous import dataset, network, transform
 
 VMIN = 0.0
 VMAX = 1.0
@@ -78,12 +81,19 @@ def image_plot(title, subtitles, rows=1, cols=3):
 
     return update
 
+def threshold(image):
+    value = np.mean(image) - 2*np.var(image)
+
+    mask = image > value
+    mask = torch.from_numpy(mask.astype(int))
+
+    return Variable(mask).double()
+
 def main(args):
     model = network.Basic().double()
     model.apply(network.normal_init)
 
-    train_loader = torch.utils.data.DataLoader(dataset.MNIBITENative(
-        args.datadir, int(args.train[0])), shuffle=True)
+    train_loader = DataLoader(dataset.MNIBITENative(args.datadir, 1))
 
     test_losses = []
     train_losses = []
@@ -99,16 +109,24 @@ def main(args):
         test_loss = 0
         train_loss = 0
 
-        for step, (mr, us) in enumerate(train_loader):
-            inputs = torch.autograd.Variable(mr).unsqueeze(1)
-            targets = torch.autograd.Variable(us).unsqueeze(1)
-            results = model(inputs)
+        loader = DataLoader(dataset.MNIBITENative(
+            args.datadir, 1), shuffle=True)
 
-            loss = criterion.thresholded_elastic_loss(results, targets)
-            loss.backward()
-            optimizer.step()
+        for _, (mr, us) in enumerate(loader):
+            if np.any(us.numpy()) and us.sum() > 100:
+                mask = threshold(us.numpy())
 
-            train_loss += loss.data[0]
+                inputs = Variable(mr).unsqueeze(1)
+                targets = Variable(us).unsqueeze(1)
+                results = model(inputs)
+
+                optimizer.zero_grad()
+                loss = results[0].mul(mask).dist(targets[0].mul(mask), 2)
+                loss.div_(mask.sum().data[0])
+                loss.backward()
+                optimizer.step()
+
+                train_loss += loss.data[0]
 
         test_losses.append(test_loss)
         train_losses.append(train_loss)
