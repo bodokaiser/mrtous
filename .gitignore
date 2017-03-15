@@ -3,3 +3,6 @@ mnibite
 
 # checkpoints
 *.ckpt
+
+# output
+output
