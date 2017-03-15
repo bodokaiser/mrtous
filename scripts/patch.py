@@ -6,7 +6,7 @@ import os
 import skimage
 import skimage.util
 
-from mrtous import util
+from mrtous import io
 from mrtous.dataset import MnibiteNative
 
 def image_to_patches(image, size):
@@ -32,10 +32,10 @@ def main(args):
         indices, = np.where(us_patches.sum() > targetsum)
 
         for j in indices:
-            util.save_image(os.path.join(targetdir,
-                f'{i+j:04d}_mr.tif'), mr_patches[j])
-            util.save_image(os.path.join(targetdir,
-                f'{i+j:04d}_us.tif'), us_patches[j])
+            io.imsave(os.path.join(targetdir, f'{i+j:04d}_mr.tif'),
+                mr_patches[j])
+            io.imsave(os.path.join(targetdir, f'{i+j:04d}_us.tif'),
+                us_patches[j])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

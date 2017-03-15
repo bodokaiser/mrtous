@@ -4,7 +4,7 @@ import skimage.io
 from torch import Tensor
 from torch.autograd import Variable
 
-def save_image(filename, image):
+def imsave(filename, image):
     if isinstance(image, Variable):
         image = image.data
     if isinstance(image, Tensor):

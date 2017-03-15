@@ -8,7 +8,7 @@ from torch.optim import Adam
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from mrtous import util
+from mrtous import io
 from mrtous.network import Basic
 from mrtous.dataset import Concat, MnibiteNative
 
@@ -94,11 +94,11 @@ def main(args):
         if args.save_images:
             os.makedirs(args.outdir, exist_ok=True)
 
-            util.save_image(os.path.join(args.outdir, f'{epoch:03d}_input.png'),
+            io.imsave(os.path.join(args.outdir, f'{epoch:03d}_input.png'),
                 inputs[0][0])
-            util.save_image(os.path.join(args.outdir, f'{epoch:03d}_output.png'),
+            io.imsave(os.path.join(args.outdir, f'{epoch:03d}_output.png'),
                 outputs[0][0])
-            util.save_image(os.path.join(args.outdir, f'{epoch:03d}_target.png'),
+            io.imsave(os.path.join(args.outdir, f'{epoch:03d}_target.png'),
                 targets[0][0])
 
         print(f'testing (epoch: {epoch}, loss: {test_loss}')
