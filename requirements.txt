@@ -8,5 +8,8 @@ matplotlib ~= 2.0
 git+https://github.com/pytorch/pytorch
 git+https://github.com/pytorch/vision
 
-# preprocessing
+# web server
+flask ~= 0.12
+
+# pre processing
 scikit-image ~= 0.12
