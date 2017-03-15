@@ -77,14 +77,14 @@ class MnibiteNative(Dataset):
         if input_transform is None:
             input_transform = Compose([
                 Normalize(self.mr.vrange),
-                CenterCrop(300),
+                CenterCrop(320),
                 ExpandDim(2),
                 ToTensor(),
             ])
         if target_transform is None:
             target_transform = Compose([
                 Normalize(self.us.vrange),
-                CenterCrop(300),
+                CenterCrop(320),
                 ExpandDim(2),
                 ToTensor(),
             ])

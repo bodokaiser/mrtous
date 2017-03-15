@@ -4,12 +4,12 @@ import os
 import torch
 import torch.nn
 
-from torch.optim import Adam
+from torch.optim import Adam, SGD
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from mrtous import io
-from mrtous.network import Basic
+from mrtous.network import UNet
 from mrtous.summary import SummaryWriter
 from mrtous.dataset import Concat, MnibiteNative
 
@@ -19,7 +19,7 @@ def threshold(images):
     return Variable(images.gt(value).float())
 
 def main(args):
-    model = Basic()
+    model = UNet()
 
     loader = DataLoader(Concat([
         MnibiteNative(
@@ -29,7 +29,7 @@ def main(args):
 
     writer = SummaryWriter(os.path.join(args.outdir, 'loss.json'))
 
-    optimizer = Adam(model.parameters())
+    optimizer = SGD(model.parameters(), lr=0.00001)
 
     for epoch in range(1, args.epochs+1):
         train_loss = 0
@@ -40,6 +40,9 @@ def main(args):
             inputs = Variable(mr)
             targets = Variable(us)
             outputs = model(inputs)
+
+            #print(outputs.size(), targets.size(), mask.size())
+            #print(outputs)
 
             optimizer.zero_grad()
             loss = outputs.mul(mask).dist(targets.mul(mask), 2)
@@ -71,7 +74,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, nargs='?', default=20)
     parser.add_argument('--outdir', type=str, nargs='?', default='output')
     parser.add_argument('--datadir', type=str, nargs='?', default='mnibite')
-    parser.add_argument('--batch_size', type=int, nargs='?', default=64)
+    parser.add_argument('--batch_size', type=int, nargs='?', default=8)
     parser.add_argument('--save-loss', dest='save_loss', action='store_true')
     parser.add_argument('--save-images', dest='save_images', action='store_true')
     parser.set_defaults(show_loss=False, show_images=False)
