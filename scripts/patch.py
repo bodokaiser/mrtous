@@ -7,7 +7,11 @@ import skimage
 import skimage.util
 
 from mrtous import io
-from mrtous.dataset import MnibiteNative
+from mrtous.dataset import Minc2, MnibiteNative
+from mrtous.transform import Normalize
+
+MR_VRANGE = [-32768, 32767]
+US_VRANGE = [0, 255]
 
 def image_to_patches(image, size):
     patches = skimage.util.view_as_windows(image, size, int(math.ceil(.3*size)))
@@ -15,8 +19,10 @@ def image_to_patches(image, size):
 
 def main(args):
     dataset = MnibiteNative(
-        os.path.join(args.datadir, f'{args.dataset:02d}_mr.mnc'),
-        os.path.join(args.datadir, f'{args.dataset:02d}_us.mnc'))
+        Minc2(os.path.join(args.datadir, f'{args.dataset:02d}_mr.mnc'),
+            Normalize(MR_VRANGE)),
+        Minc2(os.path.join(args.datadir, f'{args.dataset:02d}_us.mnc'),
+            Normalize(US_VRANGE)))
 
     targetdir = os.path.join(args.targetdir, f'{args.dataset:02d}')
     targetsum = args.threshold*args.targetsize**2
@@ -26,8 +32,8 @@ def main(args):
     for i in range(len(dataset)):
         mr_image, us_image = dataset[i]
 
-        mr_patches = image_to_patches(mr_image[0].numpy(), args.targetsize)
-        us_patches = image_to_patches(us_image[0].numpy(), args.targetsize)
+        mr_patches = image_to_patches(mr_image, args.targetsize)
+        us_patches = image_to_patches(us_image, args.targetsize)
 
         indices, = np.where(us_patches.sum() > targetsum)
 

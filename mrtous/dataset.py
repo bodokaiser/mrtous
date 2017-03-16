@@ -6,9 +6,6 @@ import skimage
 import skimage.io
 
 from torch.utils.data import Dataset
-from torchvision.transforms import Compose, ToTensor
-
-from mrtous.transform import Normalize, CenterCrop, ExpandDim
 
 class Concat(Dataset):
 
@@ -31,8 +28,9 @@ class Concat(Dataset):
 
 class Minc2(Dataset):
 
-    def __init__(self, filename):
+    def __init__(self, filename, transform=None):
         self.hdf = h5py.File(filename, 'r')
+        self.transform = transform
 
     @property
     def volume(self):
@@ -55,39 +53,31 @@ class Minc2(Dataset):
         return self.volume.shape[0]
 
     def __getitem__(self, index):
+        image = None
+
         if index < self.zlength:
-            return self.volume[index]
-        if index < self.zlength + self.ylength:
-            return self.volume[:, index - self.zlength]
-        if index < self.zlength + self.ylength + self.xlength:
-            return self.volume[:, :, index - self.zlength - self.ylength]
-        raise IndexError(f'index {index} exceeds {len(self)}')
+            image = self.volume[index]
+        if image is None and index < self.zlength + self.ylength:
+            image = self.volume[:, index - self.zlength]
+        if image is None and index < self.zlength + self.ylength + self.xlength:
+            image = self.volume[:, :, index - self.zlength - self.ylength]
+
+        if image is None:
+            raise IndexError(f'index {index} exceeds {len(self)}')
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return image
 
     def __len__(self):
         return sum(self.volume.shape)
 
 class MnibiteNative(Dataset):
 
-    def __init__(self, mr_filename, us_filename,
-        input_transform=None, target_transform=None):
-        self.mr = Minc2(mr_filename)
-        self.us = Minc2(us_filename)
-        assert len(self.mr) == len(self.us)
+    def __init__(self, mr, us, input_transform=None, target_transform=None):
+        assert len(mr) == len(us), 'minc2 datasets do not match length'
+        self.mr, self.us = mr, us
 
-        if input_transform is None:
-            input_transform = Compose([
-                Normalize(self.mr.vrange),
-                CenterCrop(320),
-                ExpandDim(2),
-                ToTensor(),
-            ])
-        if target_transform is None:
-            target_transform = Compose([
-                Normalize(self.us.vrange),
-                CenterCrop(320),
-                ExpandDim(2),
-                ToTensor(),
-            ])
         self.input_transform = input_transform
         self.target_transform = target_transform
 

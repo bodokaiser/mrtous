@@ -16,7 +16,7 @@ class ExpandDim(object):
 class Normalize(object):
 
     def __init__(self, vrange):
-        self.vrange = vrange.astype(np.float32)
+        self.vrange = np.array(vrange, np.float32)
 
     def __call__(self, image):
         image = image.astype(np.float32)

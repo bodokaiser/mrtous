@@ -7,11 +7,16 @@ import torch.nn
 from torch.optim import Adam, SGD
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+from torchvision.transforms import Compose, ToTensor
 
 from mrtous import io
 from mrtous.network import UNet
 from mrtous.summary import SummaryWriter
-from mrtous.dataset import Concat, MnibiteNative
+from mrtous.dataset import Concat, Minc2, MnibiteNative
+from mrtous.transform import Normalize, CenterCrop, ExpandDim
+
+MR_VRANGE = [-32768, 32767]
+US_VRANGE = [0, 255]
 
 def threshold(images):
     value = images.mean() - 2*images.var()
@@ -23,9 +28,19 @@ def main(args):
 
     loader = DataLoader(Concat([
         MnibiteNative(
-            os.path.join(args.datadir, f'{int(i):02d}_mr.mnc'),
-            os.path.join(args.datadir, f'{int(i):02d}_us.mnc'))
-        for i in args.train]), batch_size=args.batch_size, shuffle=True)
+            Minc2(os.path.join(args.datadir, f'{int(i):02d}_mr.mnc'), Compose([
+                Normalize(MR_VRANGE),
+                CenterCrop(320),
+                ExpandDim(2),
+                ToTensor(),
+            ])),
+            Minc2(os.path.join(args.datadir, f'{int(i):02d}_us.mnc'), Compose([
+                Normalize(US_VRANGE),
+                CenterCrop(320),
+                ExpandDim(2),
+                ToTensor(),
+            ]))) for i in args.train]),
+        batch_size=args.batch_size, num_workers=4, shuffle=True)
 
     writer = SummaryWriter(os.path.join(args.outdir, 'loss.json'))
 
@@ -40,9 +55,6 @@ def main(args):
             inputs = Variable(mr)
             targets = Variable(us)
             outputs = model(inputs)
-
-            #print(outputs.size(), targets.size(), mask.size())
-            #print(outputs)
 
             optimizer.zero_grad()
             loss = outputs.mul(mask).dist(targets.mul(mask), 2)
