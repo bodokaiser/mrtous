@@ -37,6 +37,10 @@ def train_epoch(args, epoch, model, writer, loader, optimizer):
         if us.sum() < 10:
             continue
 
+        if args.cuda:
+            us = us.cuda()
+            mr = mr.cuda()
+
         mask = threshold(us)
         inputs = Variable(mr)
         targets = Variable(us)
@@ -67,6 +71,9 @@ def train_epoch(args, epoch, model, writer, loader, optimizer):
 def main(args):
     model = UNet()
 
+    if args.cuda:
+        model.cuda()
+
     if args.save_loss or args.save_images:
         os.makedirs(args.outdir, exist_ok=True)
 
@@ -95,6 +102,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--cuda', action='store_true')
     parser.add_argument('--test', nargs='+', default=['11'])
     parser.add_argument('--train', nargs='+', default=['13'])
     parser.add_argument('--epochs', type=int, nargs='?', default=20)
@@ -106,5 +114,5 @@ if __name__ == '__main__':
     parser.add_argument('--every-epochs', type=int, dest='nepochs', default=1)
     parser.add_argument('--save-loss', dest='save_loss', action='store_true')
     parser.add_argument('--save-images', dest='save_images', action='store_true')
-    parser.set_defaults(show_loss=False, show_images=False)
+    parser.set_defaults(cuda=False, show_loss=False, show_images=False)
     main(parser.parse_args())
