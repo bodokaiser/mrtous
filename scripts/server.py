@@ -98,10 +98,15 @@ def split(items, size):
 def main(args):
     app = flask.Flask('mrtous')
 
+    path = os.path.join(args.outdir, 'loss.json')
+
     @app.route('/')
     def index():
-        with open(os.path.join(args.outdir, 'loss.json')) as f:
-            loss = '[' + ','.join(f.read().split('\n'))[0:-1] + ']'
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                loss = '[' + ','.join(f.read().split('\n'))[0:-1] + ']'
+        else:
+            loss = '[]'
 
         return flask.render_template_string(TEMPLATE, loss=loss,
             images=split(list(filter(is_image, os.listdir(args.outdir))), 3))
