@@ -5,8 +5,8 @@ h5py ~= 2.6
 matplotlib ~= 2.0
 
 # pytorch
-git+https://github.com/pytorch/pytorch
-git+https://github.com/pytorch/vision
+https://download.pytorch.org/whl/cu80/torch-0.1.10.post2-cp36-cp36m-linux_x86_64.whl
+torchvision ~= 0.1
 
 # web server
 flask ~= 0.12
