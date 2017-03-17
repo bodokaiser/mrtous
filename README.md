@@ -4,11 +4,15 @@ Generate US images from MR brain images.
 
 ## Setup
 
+Following steps only apply if you want to create pre-processed dataset from scratch
+otherwise download [this][processed].
+
 1. Download the [group2 dataset][dataset].
 2. Download and install the [minc toolset][toolset].
 
 [dataset]: http://www.bic.mni.mcgill.ca/%7Elaurence/data/data.html
 [toolset]: http://bic-mni.github.io
+[processed]: https://syncandshare.lrz.de/open/MjNGVGlYU1cycWVBeHJMb3FvdFNi/mnibite.zip
 
 ## Registration
 
@@ -44,22 +48,12 @@ Install python dependencies.
 pip3 install -r requirements.txt
 ```
 
-## Patching
-
-To exclude empty training data (volume areas where we have no US available)
-and still use batching we create overlapping 30x30 patches and filter patches.
-
-```shell
-python3 -m scripts.patch
-```
-
 ## Evaluation
 
-This will train a simple model with 30 epochs and show you live udpates
-on loss and rendered images.
+This will train a model on patient 12 and 13 and save results to output.
 
 ```shell
-python3 -W ignore main.py --show-loss --show-images --show-patches --train 12 13
+python3 -W ignore main.py --train 12 13 --save-loss --save-images
 ```
 
 ![images](https://cloud.githubusercontent.com/assets/1780466/23622246/3840871c-029e-11e7-840e-bab8f55a4c0f.png)
