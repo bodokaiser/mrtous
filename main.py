@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Lambda, ToTensor
 
 from mrtous import io
-from mrtous.network import UNet
+from mrtous.network import UNet, Basic
 from mrtous.summary import SummaryWriter
 from mrtous.dataset import Concat, Minc2, MnibiteNative
 from mrtous.transform import Normalize, CenterCrop, ExpandDim
@@ -71,6 +71,7 @@ def train_epoch(args, epoch, model, writer, loader, optimizer):
 
 def main(args):
     model = UNet()
+    #model = Basic()
 
     if args.cuda:
         model.cuda()
@@ -87,7 +88,7 @@ def main(args):
                 ToTensor(),
             ])),
             Minc2(os.path.join(args.datadir, f'{int(i):02d}_us.mnc'), Compose([
-                Lambda(lambda image: image.astype(np.uint8)),
+                Lambda(lambda image: image.astype(np.uint8).astype(np.float32) / 255.0),
                 CenterCrop(320),
                 ExpandDim(0),
                 ToTensor(),
