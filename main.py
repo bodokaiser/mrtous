@@ -82,13 +82,13 @@ def main(args):
             Minc2(os.path.join(args.datadir, f'{int(i):02d}_mr.mnc'), Compose([
                 Normalize([-32768, 32767]),
                 CenterCrop(320),
-                ExpandDim(2),
+                ExpandDim(0),
                 ToTensor(),
             ])),
             Minc2(os.path.join(args.datadir, f'{int(i):02d}_us.mnc'), Compose([
                 Lambda(lambda image: image.astype(np.uint8)),
                 CenterCrop(320),
-                ExpandDim(2),
+                ExpandDim(0),
                 ToTensor(),
             ]))) for i in args.train]),
         batch_size=args.batch_size, num_workers=args.num_workers, shuffle=True)

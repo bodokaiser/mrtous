@@ -4,12 +4,13 @@ h5py ~= 2.6
 # plotting
 matplotlib ~= 2.0
 
-# pytorch
-https://download.pytorch.org/whl/cu80/torch-0.1.10.post2-cp36-cp36m-linux_x86_64.whl
-torchvision ~= 0.1
 
-# web server
+# webserver
 flask ~= 0.12
 
 # pre processing
 scikit-image ~= 0.12
+
+# deep learning
+https://download.pytorch.org/whl/cu80/torch-0.1.10.post2-cp36-cp36m-linux_x86_64.whl
+torchvision ~= 0.1
