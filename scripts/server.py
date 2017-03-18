@@ -88,9 +88,6 @@ TEMPLATE = '''
     </html>
 '''
 
-def is_image(filename):
-    return filename.endswith('.png')
-
 def split(items, size):
     for i in range(0, len(items), size):
         yield items[i:i+size]
@@ -108,19 +105,22 @@ def main(args):
         else:
             loss = '[]'
 
+        filenames = os.listdir(args.outdir)
+        filenames.sort()
+
         return flask.render_template_string(TEMPLATE, loss=loss,
-            images=split(list(filter(is_image, os.listdir(args.outdir))), 3))
+            images=split(list(filter(lambda f: f.endswith('.png'), filenames)), 3))
 
     @app.route('/images/<filename>')
     def images(filename):
-
         return flask.send_from_directory(args.outdir, filename)
 
 
-    app.run(port=args.port)
+    app.run(host=args.host, port=args.port)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--host', type=str, nargs='?', default='0.0.0.0')
     parser.add_argument('--port', type=int, nargs='?', default=5000)
     parser.add_argument('--outdir', type=str, nargs='?', default='output')
 

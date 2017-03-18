@@ -22,7 +22,7 @@ def threshold(images):
     return Variable(images.gt(value).float())
 
 def save_images(dirname, inputs, outputs, targets, epoch, step=0):
-    fmt = lambda n: os.path.join(dirname, f'{epoch:03d}_{step:04d}_{n}.png')
+    fmt = lambda n: os.path.join(dirname, f'{step:04d}_{n}_{epoch:03d}.png')
 
     io.imsave(fmt('input'), inputs[0][0])
     io.imsave(fmt('output'), outputs[0][0])
@@ -41,14 +41,15 @@ def train_epoch(args, epoch, model, writer, loader, optimizer):
             us = us.cuda()
             mr = mr.cuda()
 
-        mask = threshold(us)
+        #mask = threshold(us)
         inputs = Variable(mr)
         targets = Variable(us)
         outputs = model(inputs)
 
         optimizer.zero_grad()
-        loss = outputs.mul(mask).dist(targets.mul(mask), 2)
-        loss.div_(mask.sum().data[0])
+        #loss = outputs.mul(mask).dist(targets.mul(mask), 2)
+        loss = outputs.dist(targets, 2)
+        #loss.div_(mask.sum().data[0])
         loss.backward()
         optimizer.step()
 
