@@ -72,14 +72,26 @@ class UNet(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.encode1 = UNetEncode(1, 32)
-        self.center = UNetConv(32, 64)
-        self.decode1 = UNetDecode(64, 32)
-        self.final = nn.Conv2d(32, 1, 1)
+        self.encode1 = UNetEncode(1, 64)
+        self.encode2 = UNetEncode(64, 128)
+        self.encode3 = UNetEncode(128, 256)
+        self.encode4 = UNetEncode(256, 512)
+        self.center = UNetConv(512, 1024)
+        self.decode4 = UNetDecode(1024, 512)
+        self.decode3 = UNetDecode(512, 256)
+        self.decode2 = UNetDecode(256, 128)
+        self.decode1 = UNetDecode(128, 64)
+        self.final = nn.Conv2d(64, 1, 1)
 
     def forward(self, inputs):
         encode1 = self.encode1(inputs)
-        center = self.center(encode1)
-        decode1 = self.decode1(encode1, center)
+        encode2 = self.encode1(encode1)
+        encode3 = self.encode1(encode2)
+        encode4 = self.encode1(encode3)
+        center = self.center(encode4)
+        decode4 = self.decode4(encode4, center)
+        decode3 = self.decode3(encode3, decode4)
+        decode2 = self.decode2(encode2, decode3)
+        decode1 = self.decode1(encode1, decode2)
 
         return self.final(decode1)
