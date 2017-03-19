@@ -1,6 +1,8 @@
 import argparse
+import itertools
 import numpy as np
 import os
+import skimage.io
 import torch
 import torch.nn
 import torch.multiprocessing as mp
@@ -8,13 +10,12 @@ import torch.multiprocessing as mp
 from torch.optim import Adam
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose, Lambda, ToTensor
+from torchvision.transforms import Compose
 
-from mrtous import io
 from mrtous.network import UNet, Basic
 from mrtous.summary import SummaryWriter
-from mrtous.dataset import Concat, Minc2, MnibiteNative
-from mrtous.transform import Normalize, CenterCrop, ExpandDim
+from mrtous.dataset import Minc2, MnibiteNative
+from mrtous.transform import CenterCrop, Normalize, ExpandDim, ToTensor
 
 def threshold(images):
     value = images.mean() - 2*images.var()
@@ -24,9 +25,14 @@ def threshold(images):
 def save_images(dirname, inputs, outputs, targets, epoch, step=0):
     fmt = lambda n: os.path.join(dirname, f'{step:04d}_{n}_{epoch:03d}.png')
 
-    io.imsave(fmt('input'), inputs[0][0])
-    io.imsave(fmt('output'), outputs[0][0])
-    io.imsave(fmt('target'), targets[0][0])
+    if inputs.is_cuda:
+        inputs = inputs.cpu()
+        outputs = outputs.cpu()
+        targets = targets.cpu()
+
+    skimage.io.imsave(fmt('input'), inputs[0][0].data.numpy())
+    skimage.io.imsave(fmt('output'), outputs[0][0].data.numpy())
+    skimage.io.imsave(fmt('target'), targets[0][0].data.numpy())
 
 def train_epoch(args, epoch, model, writer, loader, optimizer):
     model.train()
@@ -34,7 +40,7 @@ def train_epoch(args, epoch, model, writer, loader, optimizer):
     total_loss = 0
 
     for step, (mr, us) in enumerate(loader):
-        if us.sum() < 10:
+        if us.sum() < 200:
             continue
 
         if args.cuda:
@@ -67,11 +73,11 @@ def train_epoch(args, epoch, model, writer, loader, optimizer):
         if args.save_images:
             save_images(args.outdir, inputs, outputs, targets, epoch)
 
-    print(f'training (epoch: {epoch}, loss: {total_loss}, pid: {pid})')
+    print(f'training (epoch: {epoch}, loss: {total_loss})')
 
 def main(args):
-    model = UNet()
-    #model = Basic()
+    #model = UNet()
+    model = Basic()
 
     if args.cuda:
         model.cuda()
@@ -79,21 +85,22 @@ def main(args):
     if args.save_loss or args.save_images:
         os.makedirs(args.outdir, exist_ok=True)
 
-    loader = DataLoader(Concat([
-        MnibiteNative(
+    loader = itertools.chain(*[
+        DataLoader(MnibiteNative(
             Minc2(os.path.join(args.datadir, f'{int(i):02d}_mr.mnc'), Compose([
-                Normalize([-32768, 32767]),
                 CenterCrop(320),
+                Normalize(MnibiteNative.MR_VRANGE),
                 ExpandDim(0),
                 ToTensor(),
             ])),
             Minc2(os.path.join(args.datadir, f'{int(i):02d}_us.mnc'), Compose([
-                Lambda(lambda image: image.astype(np.uint8).astype(np.float32) / 255.0),
                 CenterCrop(320),
+                Normalize(MnibiteNative.US_VRANGE),
                 ExpandDim(0),
                 ToTensor(),
-            ]))) for i in args.train]),
-        batch_size=args.batch_size, num_workers=args.num_workers, shuffle=True)
+            ])),
+        ), shuffle=True, num_workers=args.num_workers, batch_size=args.batch_size)
+    for i in range(1, 4)])
 
     writer = SummaryWriter(args.outdir, 'loss.json')
 
@@ -111,7 +118,7 @@ if __name__ == '__main__':
     parser.add_argument('--outdir', nargs='?', default='output')
     parser.add_argument('--datadir', nargs='?', default='mnibite')
     parser.add_argument('--batch_size', type=int, nargs='?', default=1)
-    parser.add_argument('--num_workers', type=int, nargs='?', default=2)
+    parser.add_argument('--num_workers', type=int, nargs='?', default=1)
     parser.add_argument('--every-steps', type=int, dest='nsteps', default=10)
     parser.add_argument('--every-epochs', type=int, dest='nepochs', default=1)
     parser.add_argument('--save-loss', dest='save_loss', action='store_true')

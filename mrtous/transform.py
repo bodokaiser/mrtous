@@ -1,9 +1,16 @@
-import random
 import numpy as np
+import random
 import scipy as sp
-
 import skimage.filters
 import skimage.transform
+import torch
+
+class ToTensor(object):
+
+    def __call__(self, image):
+        assert isinstance(image, np.ndarray), 'image not ndarray'
+
+        return torch.from_numpy(image)
 
 class ExpandDim(object):
 
@@ -11,17 +18,24 @@ class ExpandDim(object):
         self.axis = axis
 
     def __call__(self, image):
+        assert isinstance(image, np.ndarray), 'image not ndarray'
+
         return np.expand_dims(image, self.axis)
 
 class Normalize(object):
 
     def __init__(self, vrange):
-        self.vrange = np.array(vrange, np.float32)
+        self.center = vrange[0]
+        self.vrange = np.sum(np.abs(vrange))
 
     def __call__(self, image):
-        image = image.astype(np.float32)
-        image -= np.min(self.vrange)
-        image /= np.sum(np.abs(self.vrange))
+        assert len(image.shape) == 2, 'image not grayscale'
+
+        if isinstance(image, np.ndarray):
+            image = image.astype(np.float32)
+            image -= self.center
+            image /= self.vrange
+
         return image
 
 class CenterCrop(object):

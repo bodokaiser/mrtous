@@ -2,16 +2,11 @@ import argparse
 import math
 import numpy as np
 import os
-
-import skimage
+import skimage.io
 import skimage.util
 
-from mrtous import io
 from mrtous.dataset import Minc2, MnibiteNative
 from mrtous.transform import Normalize
-
-MR_VRANGE = [-32768, 32767]
-US_VRANGE = [0, 255]
 
 def image_to_patches(image, size):
     patches = skimage.util.view_as_windows(image, size, int(math.ceil(.3*size)))
@@ -20,9 +15,9 @@ def image_to_patches(image, size):
 def main(args):
     dataset = MnibiteNative(
         Minc2(os.path.join(args.datadir, f'{args.dataset:02d}_mr.mnc'),
-            Normalize(MR_VRANGE)),
+            transform=Normalize(MnibiteNative.MR_VRANGE)),
         Minc2(os.path.join(args.datadir, f'{args.dataset:02d}_us.mnc'),
-            Normalize(US_VRANGE)))
+            transform=Normalize(MnibiteNative.US_VRANGE)))
 
     targetdir = os.path.join(args.targetdir, f'{args.dataset:02d}')
     targetsum = args.threshold*args.targetsize**2
@@ -35,12 +30,12 @@ def main(args):
         mr_patches = image_to_patches(mr_image, args.targetsize)
         us_patches = image_to_patches(us_image, args.targetsize)
 
-        indices, = np.where(us_patches.sum() > targetsum)
+        indices, = np.where(us_patches.sum(axis=(1, 2)) > targetsum)
 
         for j in indices:
-            io.imsave(os.path.join(targetdir, f'{i+j:04d}_mr.tif'),
+            skimage.io.imsave(os.path.join(targetdir, f'{i+j:04d}_mr.tif'),
                 mr_patches[j])
-            io.imsave(os.path.join(targetdir, f'{i+j:04d}_us.tif'),
+            skimage.io.imsave(os.path.join(targetdir, f'{i+j:04d}_us.tif'),
                 us_patches[j])
 
 if __name__ == '__main__':

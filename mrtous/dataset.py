@@ -1,30 +1,10 @@
 import h5py
 import numpy as np
 import os
-
 import skimage
 import skimage.io
 
 from torch.utils.data import Dataset
-
-class Concat(Dataset):
-
-    def __init__(self, datasets):
-        self.datasets = datasets
-        self.lengths = [len(d) for d in datasets]
-        self.offsets = np.cumsum(self.lengths)
-        self.length = np.sum(self.lengths)
-
-    def __getitem__(self, index):
-        for i, offset in enumerate(self.offsets):
-            if index < offset:
-                if i > 0:
-                    index -= self.offsets[i-1]
-                return self.datasets[i][index]
-        raise IndexError(f'{index} exceeds {self.length}')
-
-    def __len__(self):
-        return self.length
 
 class Minc2(Dataset):
 
@@ -73,6 +53,9 @@ class Minc2(Dataset):
         return sum(self.volume.shape)
 
 class MnibiteNative(Dataset):
+
+    MR_VRANGE = [-32768, 32767]
+    US_VRANGE = [0, 255]
 
     def __init__(self, mr, us, input_transform=None, target_transform=None):
         assert len(mr) == len(us), 'minc2 datasets do not match length'
