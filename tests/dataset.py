@@ -1,113 +1,36 @@
-import os
-import unittest
 import numpy as np
 
-from mrtous import dataset
+from unittest import TestCase
 
-class TestMINC2(unittest.TestCase):
+from mrtous.dataset import MINC2, MNIBITE
 
-    LENGTH = [394, 466, 378]
-    RANGES = [[-32768, 32767], [0, 255]]
-
-    def setUp(self):
-        self.minc = [
-            dataset.MINC2('mnibite/01_mr.mnc'),
-            dataset.MINC2('mnibite/01_us.mnc'),
-        ]
-
-    def test_init(self):
-        for index, minc in enumerate(self.minc):
-            with self.subTest(index=index):
-                self.assertEqual(list(minc.vrange), self.RANGES[index])
-                self.assertEqual(minc.xlength, self.LENGTH[0])
-                self.assertEqual(minc.ylength, self.LENGTH[1])
-                self.assertEqual(minc.zlength, self.LENGTH[2])
-
-    def test_iter(self):
-        for index, minc in enumerate(self.minc):
-            with self.subTest(index=index):
-                for _ in minc:
-                    pass
-
-    def test_getlen(self):
-        for index, minc in enumerate(self.minc):
-            with self.subTest(index=index):
-                self.assertEqual(len(minc), np.sum(self.LENGTH))
-
-    def test_getitem(self):
-        for index, minc in enumerate(self.minc):
-            with self.subTest(index=index):
-                self.assertLessEqual(minc[0].max(), 1.0)
-                self.assertGreaterEqual(minc[0].min(), 0.0)
-
-                np.testing.assert_array_equal(minc[0], minc.volume[0])
-                np.testing.assert_array_equal(minc[self.LENGTH[2]-1],
-                    minc.volume[self.LENGTH[2]-1])
-
-                np.testing.assert_array_equal(minc[self.LENGTH[2]],
-                    np.flipud(minc.volume[:, 0]))
-                np.testing.assert_array_equal(minc[np.sum(self.LENGTH[1:3])-1],
-                    np.flipud(minc.volume[:, self.LENGTH[1]-1]))
-
-                np.testing.assert_array_equal(minc[np.sum(self.LENGTH[1:3])],
-                    np.flipud(minc.volume[:, :, 0]))
-                np.testing.assert_array_equal(minc[np.sum(self.LENGTH)-1],
-                    np.flipud(minc.volume[:, :, self.LENGTH[0]-1]))
-
-                with self.assertRaises(IndexError):
-                    minc[np.sum(self.LENGTH)]
-
-class TestMNIBITENative(unittest.TestCase):
+class TestMINC2(TestCase):
 
     def setUp(self):
-        self.mnibite = dataset.MNIBITENative('mnibite', 1)
-
-    def test_init(self):
-        self.assertIsInstance(self.mnibite.mr, dataset.MINC2)
-        self.assertIsInstance(self.mnibite.us, dataset.MINC2)
+        self.mr_minc = MINC2('data/01_mr.mnc')
+        self.us_minc = MINC2('data/01_us.mnc')
 
     def test_getlen(self):
-        self.assertEqual(len(self.mnibite), len(self.mnibite.mr))
-        self.assertEqual(len(self.mnibite), len(self.mnibite.us))
+        self.assertEqual(len(self.mr_minc), 378)
+        self.assertEqual(len(self.us_minc), 378)
 
     def test_getitem(self):
-        def transform(mr, us):
-            np.testing.assert_array_equal(mr, self.mnibite.mr[0])
-            np.testing.assert_array_equal(us, self.mnibite.us[1])
-            return 1, 2
-        np.testing.assert_array_equal(self.mnibite[0][0], self.mnibite.mr[0])
-        np.testing.assert_array_equal(self.mnibite[0][1], self.mnibite.us[0])
-        with self.assertRaises(IndexError):
-            self.mnibite[len(self.mnibite)]
-        self.mnibite.transform = transform
-        self.assertTupleEqual(self.mnibite[0], (1, 2))
+        self.assertTupleEqual(self.mr_minc[0].shape, (466, 394))
+        self.assertTupleEqual(self.us_minc[0].shape, (466, 394))
+        self.assertTupleEqual(self.mr_minc[:, 0].shape, (378, 394))
+        self.assertTupleEqual(self.mr_minc[:, 0].shape, (378, 394))
+        self.assertTupleEqual(self.mr_minc[:, :, 0].shape, (378, 466))
+        self.assertTupleEqual(self.mr_minc[:, :, 0].shape, (378, 466))
 
-def count_files(root, extension):
-    return sum(1 for f in os.listdir(root) if f.endswith(extension))
 
-class TestMNIBITENative(unittest.TestCase):
+class TestMNIBITE(TestCase):
 
     def setUp(self):
-        self.mnibite1 = dataset.MNIBITEFolder('mnibite/11')
-        self.mnibite2 = dataset.MNIBITEFolder('mnibite/13')
-        self.mnibite3 = dataset.MNIBITEFolder(['mnibite/11', 'mnibite/13'])
+        self.mnibite = MNIBITE('data/01_mr.mnc', 'data/01_us.mnc')
 
     def test_init(self):
-        self.assertGreaterEqual(len(self.mnibite1.mr_fnames), 0)
-        self.assertGreaterEqual(len(self.mnibite1.us_fnames), 0)
-
-    def test_getitem(self):
-        mr, us = self.mnibite1[0]
-
-        self.assertIsInstance(mr, np.ndarray)
-        self.assertIsInstance(us, np.ndarray)
-        self.assertTupleEqual(mr.shape, us.shape)
-        self.assertTupleEqual(mr.shape, (30, 30))
+        self.assertIsInstance(self.mnibite.mr, MINC2)
+        self.assertIsInstance(self.mnibite.us, MINC2)
 
     def test_getlen(self):
-        len1 = count_files('mnibite/11', '.png') // 2
-        len2 = count_files('mnibite/13', '.png') // 2
-
-        self.assertEqual(len(self.mnibite1), len1)
-        self.assertEqual(len(self.mnibite2), len2)
-        self.assertEqual(len(self.mnibite3), len1+len2)
+        self.assertEqual(len(self.mnibite), 378)
