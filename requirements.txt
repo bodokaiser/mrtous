@@ -1,22 +1,8 @@
 # dataset
-h5py ~= 2.6
-
-# matrices
-numpy ~= 1.12
-
-# plotting
-matplotlib ~= 2.0
-
-# numpy
-numpy ~= 1.12
-
-# webserver
-flask ~= 0.12
+h5py ~= 2.7
 
 # images
-scikit-image ~= 0.12
+scikit-image ~= 0.13
 
 # deep learning
-https://download.pytorch.org/whl/torch-0.1.10.post1-cp36-cp36m-macosx_10_7_x86_64.whl
-#https://download.pytorch.org/whl/cu80/torch-0.1.10.post2-cp36-cp36m-linux_x86_64.whl
 torchvision ~= 0.1
