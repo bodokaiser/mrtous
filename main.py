@@ -21,9 +21,8 @@ target_transform = Compose([
 def main(args):
     model = Simple()
 
-    loader = DataLoader(MNIBITE('data/01_mr.mnc', 'data/01_us.mnc',
-        input_transform, target_transform),
-        num_workers=args.num_workers, batch_size=args.batch_size)
+    loader = DataLoader(MNIBITE(args.datadir, input_transform, target_transform))
+        #num_workers=args.num_workers, batch_size=args.batch_size)
     optimizer = SGD(model.parameters(), 1e-4)
 
     for epoch in range(1, args.num_epochs+1):
@@ -51,6 +50,7 @@ if __name__ == '__main__':
     subparsers.required = True
 
     parser_train = subparsers.add_parser('train')
+    parser_train.add_argument('--datadir', required=True)
     parser_train.add_argument('--num-epochs', type=int, default=32)
     parser_train.add_argument('--num-workers', type=int, default=4)
     parser_train.add_argument('--batch-size', type=int, default=32)
