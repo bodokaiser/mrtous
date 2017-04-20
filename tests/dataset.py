@@ -15,12 +15,12 @@ class TestMINC2(TestCase):
         self.assertEqual(len(self.us_minc), 378)
 
     def test_getitem(self):
-        self.assertTupleEqual(self.mr_minc[0].shape, (466, 394))
-        self.assertTupleEqual(self.us_minc[0].shape, (466, 394))
-        self.assertTupleEqual(self.mr_minc[:, 0].shape, (378, 394))
-        self.assertTupleEqual(self.mr_minc[:, 0].shape, (378, 394))
-        self.assertTupleEqual(self.mr_minc[:, :, 0].shape, (378, 466))
-        self.assertTupleEqual(self.mr_minc[:, :, 0].shape, (378, 466))
+        self.assertTupleEqual(self.mr_minc[0].shape, (466, 394, 1))
+        self.assertTupleEqual(self.us_minc[0].shape, (466, 394, 1))
+        self.assertTupleEqual(self.mr_minc[:, 0].shape, (378, 394, 1))
+        self.assertTupleEqual(self.mr_minc[:, 0].shape, (378, 394, 1))
+        self.assertTupleEqual(self.mr_minc[:, :, 0].shape, (378, 466, 1))
+        self.assertTupleEqual(self.mr_minc[:, :, 0].shape, (378, 466, 1))
 
 
 class TestMNIBITE(TestCase):

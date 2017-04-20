@@ -47,14 +47,3 @@ Install python dependencies.
 ```shell
 pip3 install -r requirements.txt
 ```
-
-## Evaluation
-
-This will train a model on patient 12 and 13 and save results to output.
-
-```shell
-python3 -W ignore main.py --train 12 13 --save-loss --save-images
-```
-
-![images](https://cloud.githubusercontent.com/assets/1780466/23622246/3840871c-029e-11e7-840e-bab8f55a4c0f.png)
-![patches](https://cloud.githubusercontent.com/assets/1780466/23622248/3a23ff96-029e-11e7-8d3a-6cba2238a966.png)

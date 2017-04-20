@@ -11,7 +11,7 @@ class MINC2(Dataset):
         self.transform = transform
 
     def __getitem__(self, index):
-        slice = self.volume[index]
+        slice = np.expand_dims(self.volume[index], 2)
         if self.transform is not None:
             slice = self.transform(slice)
         return slice
