@@ -1,8 +1,8 @@
 # dataset
 h5py ~= 2.7
 
-# images
-scikit-image ~= 0.13
-
 # deep learning
 torchvision ~= 0.1
+
+# visualization
+visdom ~= 0.1

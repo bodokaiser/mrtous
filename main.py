@@ -5,6 +5,8 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize
 
+from visdom import Visdom
+
 from mrtous.network import Simple
 from mrtous.dataset import MNIBITE
 from mrtous.transform import ToTensor
@@ -20,10 +22,14 @@ target_transform = Compose([
 
 def main(args):
     model = Simple()
+    model.train()
 
-    loader = DataLoader(MNIBITE(args.datadir, input_transform, target_transform))
-        #num_workers=args.num_workers, batch_size=args.batch_size)
+    loader = DataLoader(MNIBITE(args.datadir, input_transform, target_transform),
+        num_workers=args.num_workers, batch_size=args.batch_size)
     optimizer = SGD(model.parameters(), 1e-4)
+
+    if args.vis_steps > 0:
+        vis = Visdom(args.vis_port)
 
     for epoch in range(1, args.num_epochs+1):
         epoch_loss = []
@@ -40,6 +46,12 @@ def main(args):
 
             epoch_loss.append(loss.data[0])
 
+            if step % args.vis_steps == 0:
+                title = f'(epoch: {epoch}, step: {step})'
+                vis.heatmap(mr[0][0].numpy(), opts=dict(title=f'input {title}'))
+                #vis.image(us[0][0].byte().numpy(), opts=dict(title=f'target {title}'))
+                #vis.image(outputs[0][0].data.numpy(), opts=dict(title=f'output {title}'))
+
         print(f'epoch: {epoch}, loss: {sum(epoch_loss)/len(epoch_loss)}')
 
 if __name__ == '__main__':
@@ -54,5 +66,7 @@ if __name__ == '__main__':
     parser_train.add_argument('--num-epochs', type=int, default=32)
     parser_train.add_argument('--num-workers', type=int, default=4)
     parser_train.add_argument('--batch-size', type=int, default=32)
+    parser_train.add_argument('--vis-port', type=int, default=3000)
+    parser_train.add_argument('--vis-steps', type=int, default=0)
 
     main(parser.parse_args())
