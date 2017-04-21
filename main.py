@@ -9,7 +9,7 @@ from torchvision.transforms import Compose, Normalize, Lambda
 
 from visdom import Visdom
 
-from mrtous.network import Simple
+from mrtous.network import One, Two
 from mrtous.dataset import MNIBITE
 from mrtous.transform import ToTensor, Clip, HistNormalize
 
@@ -24,7 +24,11 @@ target_transform = Compose([
 ])
 
 def main(args):
-    model = Simple()
+    if args.model == 'one':
+        Net = One
+    if args.model == 'two':
+        Net = Two
+    model = Net()
     model.train()
 
     loader = DataLoader(MNIBITE(args.datadir, input_transform, target_transform))
@@ -42,7 +46,8 @@ def main(args):
 
             inputs = Variable(mr)
             targets = Variable(us)
-            outputs = model(inputs).mul(targets.gt(0).float())
+            outputs = model(inputs)
+            outputs = outputs.mul(targets.gt(0).float())
 
             optimizer.zero_grad()
             loss = outputs.dist(targets)
@@ -64,6 +69,7 @@ def main(args):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--cuda', action='store_true')
+    parser.add_argument('--model', choices=['one', 'two'], required=True)
 
     subparsers = parser.add_subparsers(dest='action')
     subparsers.required = True
