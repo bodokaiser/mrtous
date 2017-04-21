@@ -28,7 +28,9 @@ class HistNormalize:
 
     def __call__(self, x):
         try:
-            threshold = min(0, threshold_li(x))
+            threshold = max(0, threshold_li(x))
         except ValueError:
             return np.zeros_like(x)
-        return equalize_hist(x, self.nbins, x > threshold)
+        mask = x > threshold if self.mask else np.ones_like(x)
+
+        return np.multiply(equalize_hist(x, self.nbins, mask), mask)

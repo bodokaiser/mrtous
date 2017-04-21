@@ -27,8 +27,7 @@ def main(args):
     model = Simple()
     model.train()
 
-    loader = DataLoader(MNIBITE(args.datadir, input_transform, target_transform),
-        num_workers=args.num_workers)
+    loader = DataLoader(MNIBITE(args.datadir, input_transform, target_transform))
     optimizer = SGD(model.parameters(), 1e-4)
 
     if args.vis_steps > 0:
@@ -38,12 +37,12 @@ def main(args):
         epoch_loss = []
 
         for step, (mr, us) in enumerate(loader):
-            if us.sum() < 1e4:
+            if us.sum() < 1e3:
                 continue
 
             inputs = Variable(mr)
             targets = Variable(us)
-            outputs = model(inputs)
+            outputs = model(inputs).mul(targets.gt(0).float())
 
             optimizer.zero_grad()
             loss = outputs.dist(targets)
@@ -70,7 +69,6 @@ if __name__ == '__main__':
     parser_train = subparsers.add_parser('train')
     parser_train.add_argument('--datadir', required=True)
     parser_train.add_argument('--num-epochs', type=int, default=32)
-    parser_train.add_argument('--num-workers', type=int, default=4)
     parser_train.add_argument('--vis-port', type=int, default=3000)
     parser_train.add_argument('--vis-steps', type=int, default=0)
 
