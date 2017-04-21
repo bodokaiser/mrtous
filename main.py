@@ -53,9 +53,9 @@ def main(args):
 
             if step % args.vis_steps == 0:
                 title = f'(epoch: {epoch}, step: {step})'
-                vis.image(mr[0][0], opts=dict(title=f'input {title}'))
-                vis.image(us[0][0], opts=dict(title=f'target {title}'))
+                vis.image(inputs[0][0].data, opts=dict(title=f'input {title}'))
                 vis.image(outputs[0][0].data, opts=dict(title=f'output {title}'))
+                vis.image(targets[0][0].data, opts=dict(title=f'target {title}'))
 
         print(f'epoch: {epoch}, loss: {sum(epoch_loss)/len(epoch_loss)}')
 

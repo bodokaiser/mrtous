@@ -6,11 +6,15 @@ class Simple(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.conv1 = nn.Conv2d(1, 3, 3, 1, 1)
-        self.conv2 = nn.Conv2d(3, 1, 1)
+        self.decoder = nn.Sequential(
+            nn.Conv2d(1, 64, 3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+        )
+        self.encoder = nn.Conv2d(64, 1, 1)
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.conv2(x)
+        x = self.decoder(x)
+        x = self.encoder(x)
 
         return x
