@@ -56,6 +56,8 @@ def main(args):
                 vis.image(inputs[0][0].data, opts=dict(title=f'input {title}'))
                 vis.image(outputs[0][0].data, opts=dict(title=f'output {title}'))
                 vis.image(targets[0][0].data, opts=dict(title=f'target {title}'))
+            if step & args.log_steps == 0:
+                print(f'step: {step}, loss: {sum(epoch_loss)/len(epoch_loss)}')
 
         print(f'epoch: {epoch}, loss: {sum(epoch_loss)/len(epoch_loss)}')
 
@@ -71,5 +73,6 @@ if __name__ == '__main__':
     parser_train.add_argument('--num-epochs', type=int, default=32)
     parser_train.add_argument('--vis-port', type=int, default=3000)
     parser_train.add_argument('--vis-steps', type=int, default=0)
+    parser_train.add_argument('--log-steps', type=int, default=0)
 
     main(parser.parse_args())
