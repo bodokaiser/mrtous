@@ -1,8 +1,11 @@
 # dataset
 h5py ~= 2.7
 
-# deep learning
+# learning
 torchvision ~= 0.1
 
+# preprocessing
+scikit-image ~= 0.13
+
 # visualization
-visdom ~= 0.1
+git+https://github.com/facebookresearch/visdom
