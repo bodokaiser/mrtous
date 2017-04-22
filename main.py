@@ -9,7 +9,7 @@ from torchvision.transforms import Compose, Normalize, Lambda
 
 from visdom import Visdom
 
-from mrtous.network import One, Two
+from mrtous.network import One, Two, UNet
 from mrtous.dataset import MNIBITE
 from mrtous.transform import ToTensor, Clip, HistNormalize
 
@@ -28,6 +28,9 @@ def main(args):
         Net = One
     if args.model == 'two':
         Net = Two
+    if args.model == 'unet':
+        Net = UNet
+
     model = Net()
     model.train()
 
@@ -69,7 +72,7 @@ def main(args):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--cuda', action='store_true')
-    parser.add_argument('--model', choices=['one', 'two'], required=True)
+    parser.add_argument('--model', choices=['one', 'two', 'unet'], required=True)
 
     subparsers = parser.add_subparsers(dest='action')
     subparsers.required = True
