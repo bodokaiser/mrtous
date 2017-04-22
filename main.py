@@ -34,6 +34,9 @@ def main(args):
     model = Net()
     model.train()
 
+    if args.cuda:
+        model = model.cuda()
+
     loader = DataLoader(MNIBITE(args.datadir, input_transform, target_transform))
     optimizer = SGD(model.parameters(), 1e-4)
 
@@ -49,6 +52,11 @@ def main(args):
 
             inputs = Variable(mr)
             targets = Variable(us)
+
+            if args.cuda:
+                inputs = inputs.cuda()
+                targets = targets.cuda()
+
             outputs = model(inputs)
             outputs = outputs.mul(targets.gt(0).float())
 
@@ -61,11 +69,11 @@ def main(args):
 
             if step % args.vis_steps == 0:
                 title = f'(epoch: {epoch}, step: {step})'
-                vis.image(inputs[0][0].data, opts=dict(title=f'input {title}'))
-                vis.image(outputs[0][0].data, opts=dict(title=f'output {title}'))
-                vis.image(targets[0][0].data, opts=dict(title=f'target {title}'))
+                vis.image(inputs[0][0].cpu().data, opts=dict(title=f'input {title}'))
+                vis.image(outputs[0][0].cpu().data, opts=dict(title=f'output {title}'))
+                vis.image(targets[0][0].cpu().data, opts=dict(title=f'target {title}'))
             if step & args.log_steps == 0:
-                print(f'step: {step}, loss: {sum(epoch_loss)/len(epoch_loss)}')
+                print(f'epoch: {epoch}, step: {step}, loss: {sum(epoch_loss)/len(epoch_loss)}')
 
         print(f'epoch: {epoch}, loss: {sum(epoch_loss)/len(epoch_loss)}')
 
