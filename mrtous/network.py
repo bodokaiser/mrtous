@@ -115,6 +115,7 @@ class UNet(nn.Module):
         self.final = nn.Sequential(
             UNetConv(128, 64),
             nn.Conv2d(64, 1, 1),
+            nn.UpsamplingBilinear2d(scale_factor=2),
         )
 
     def concat(self, x, y):
@@ -131,4 +132,4 @@ class UNet(nn.Module):
         enc1 = self.encode1(self.concat(enc2, dec2))
         fin = self.final(self.concat(enc1, dec1))
 
-        return F.upsample_bilinear(fin, x.size()[2:])
+        return center_crop(fin, x.size()[2:])
