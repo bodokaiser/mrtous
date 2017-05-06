@@ -7,5 +7,8 @@ torchvision ~= 0.1
 # preprocessing
 scikit-image ~= 0.13
 
+# training
+git+https://github.com/pytorch/tnt
+
 # visualization
 git+https://github.com/facebookresearch/visdom
