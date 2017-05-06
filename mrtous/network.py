@@ -155,35 +155,3 @@ class USNetEnc(nn.Module):
         x = F.max_unpool2d(x, indices, 2, 2)
 
         return self.encode(x)
-
-
-class USNet(nn.Module):
-
-    def __init__(self):
-        super().__init__()
-
-        modules = list(models.vgg16_bn().features.children())
-        modules[0] = nn.Conv2d(1, 64, 3, padding=1)
-
-        self.decode1 = nn.Sequential(*modules[:5])
-        self.decode2 = nn.Sequential(*modules[6:12])
-        self.decode3 = nn.Sequential(*modules[13:22])
-        self.decode4 = nn.Sequential(*modules[23:32])
-        self.encode4 = USNetEnc(512, 256)
-        self.encode3 = USNetEnc(256, 128)
-        self.encode2 = USNetEnc(128, 64)
-        self.encode1 = USNetEnc(64, 64)
-        self.final = nn.Conv2d(64, 1, 1)
-        self.pool = nn.MaxPool2d(2, 2, return_indices=True)
-
-    def forward(self, x):
-        dec1, ind1 = self.pool(self.decode1(x))
-        dec2, ind2 = self.pool(self.decode2(dec1))
-        dec3, ind3 = self.pool(self.decode3(dec2))
-        dec4, ind4 = self.pool(self.decode4(dec3))
-        enc4 = self.encode4(dec4, ind4)
-        enc3 = self.encode3(enc4, ind3)
-        enc2 = self.encode2(enc3, ind2)
-        enc1 = self.encode1(enc2, ind1)
-
-        return self.final(enc1)
