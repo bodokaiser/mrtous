@@ -3,6 +3,7 @@ import torch
 
 from argparse import ArgumentParser
 
+from torch.nn import L1Loss, MSELoss
 from torch.optim import Adam
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
@@ -23,7 +24,7 @@ target_transform = Compose([
     ToTensor(),
 ])
 
-def test_epoch(args, epoch, model, loader, trainer):
+def test_epoch(args, epoch, model, loader, crit1, crit2, trainer):
     model.eval()
 
     for step, (mr, us) in enumerate(loader):
@@ -40,11 +41,12 @@ def test_epoch(args, epoch, model, loader, trainer):
         outputs = model(inputs)
         outputs = outputs.mul(targets.gt(0).float())
 
-        l1loss = outputs.dist(targets, 1)
-        l2loss = outputs.dist(targets, 2)
+        loss1 = crit1(outputs, targets)
+        loss2 = crit2(outputs, targets)
+        loss = loss1 + loss2
 
-        trainer.l1meter.add(l1loss.data[0])
-        trainer.l2meter.add(l2loss.data[0])
+        trainer.l1meter.add(loss1.data[0])
+        trainer.l2meter.add(loss2.data[0])
 
         if args.log_steps > 0 and step % args.log_steps == 0:
             trainer.log_losses(epoch, step)
@@ -54,7 +56,7 @@ def test_epoch(args, epoch, model, loader, trainer):
                 output=outputs[0][0],
                 target=targets[0][0]))
 
-def train_epoch(args, epoch, model, loader, optimizer, trainer):
+def train_epoch(args, epoch, model, loader, crit1, crit2, optimizer, trainer):
     model.train()
 
     for step, (mr, us) in enumerate(loader):
@@ -71,14 +73,16 @@ def train_epoch(args, epoch, model, loader, optimizer, trainer):
         outputs = model(inputs)
         outputs = outputs.mul(targets.gt(0).float())
 
+        loss1 = crit1(outputs, targets)
+        loss2 = crit2(outputs, targets)
+        loss = loss1 + loss2
+
         optimizer.zero_grad()
-        l1loss = outputs.dist(targets, 1)
-        l2loss = outputs.dist(targets, 2)
-        l2loss.backward()
+        loss.backward()
         optimizer.step()
 
-        trainer.l1meter.add(l1loss.data[0])
-        trainer.l2meter.add(l2loss.data[0])
+        trainer.l1meter.add(loss1.data[0])
+        trainer.l2meter.add(loss2.data[0])
 
         if args.log_steps > 0 and step % args.log_steps == 0:
             trainer.log_losses(epoch, step)
@@ -97,23 +101,28 @@ def main(args):
         Net = UNet
 
     model = Net()
+    crit1 = L1Loss()
+    crit2 = MSELoss()
 
     if args.cuda:
         model = model.cuda()
+        crit1 = crit1.cuda()
+        crit2 = crit2.cuda()
     if args.state:
         model.load_state_dict(torch.load(args.state))
 
     trainer = Trainer(args, model)
     optimizer = Adam(model.parameters())
-    testing = DataLoader(MNIBITE(args.testdir, input_transform, target_transform))
-    training = DataLoader(MNIBITE(args.traindir, input_transform, target_transform))
+
+    test_loader = DataLoader(MNIBITE(args.testdir, input_transform, target_transform))
+    train_loader = DataLoader(MNIBITE(args.traindir, input_transform, target_transform))
 
     for epoch in range(args.num_epochs):
-        train_epoch(args, epoch, model, training, optimizer, trainer)
+        train_epoch(args, epoch, model, train_loader, crit1, crit2, optimizer, trainer)
         trainer.vis_losses(epoch)
         trainer.reset()
 
-        test_epoch(args, epoch, model, testing, trainer)
+        test_epoch(args, epoch, model, test_loader, crit1, crit2, trainer)
         trainer.vis_losses(epoch)
         trainer.reset()
 
